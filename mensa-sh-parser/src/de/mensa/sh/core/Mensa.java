@@ -143,6 +143,46 @@ public class Mensa {
 		return locations;
 	}
 	
+	
+	/**
+	 * @return Menue table as html code
+	 */
+	public String getMenueAsHtml(){
+		String html = "";
+		
+		// add css files
+		html += Settings.getCssLink("allgemein.css");
+		html += Settings.getInlineCss();
+		
+		if( menueURL != "" ){			
+			
+			try {
+				
+				// get menue from url
+				Document doc = Jsoup.connect( menueURL ).get();
+				
+				// remove links to remote sites
+				// and unwrap all other links
+				doc.select("a[target=_blank]").remove();
+				doc.select("a").unwrap();
+				Elements tables = doc.select("table");
+				
+				// add tables html
+				for( Element e : tables ){					
+					html += e.outerHtml().replace( "src=\"..",
+							"src=\""+Settings.sh_mensa_url );					
+				}
+				
+				
+				
+				
+			} catch (IOException e) {}			
+		}
+		
+		return html;
+	}
+	
+	
 	/**
 	 * Prints mensa data
 	 */
@@ -157,6 +197,76 @@ public class Mensa {
 		rString += "menue url: "+menueURL;
 		
 		return rString;
+	}
+
+	/**
+	 * @return the city
+	 */
+	public String getCity() {
+		return city;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @return the lunchTime
+	 */
+	public String getLunchTime() {
+		return lunchTime;
+	}
+
+	/**
+	 * @return the offers
+	 */
+	public List<String> getOffers() {
+		return offers;
+	}
+
+	/**
+	 * @return the menueURL
+	 */
+	public String getMenueURL() {
+		return menueURL;
+	}
+
+	/**
+	 * @param city the city to set
+	 */
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * @param lunchTime the lunchTime to set
+	 */
+	public void setLunchTime(String lunchTime) {
+		this.lunchTime = lunchTime;
+	}
+
+	/**
+	 * @param offers the offers to set
+	 */
+	public void setOffers(List<String> offers) {
+		this.offers = offers;
+	}
+
+	/**
+	 * @param menueURL the menueURL to set
+	 */
+	public void setMenueURL(String menueURL) {
+		this.menueURL = menueURL;
 	}
 	
 }
