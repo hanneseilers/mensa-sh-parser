@@ -174,9 +174,17 @@ public class Mensa {
 				}
 				
 				
-				
-				
 			} catch (IOException e) {}			
+		}
+		else {
+			// add mensa information
+			html += "<b>"+name+"</b><br />";
+			html += "Mittagessen: "+lunchTime+"<br />";
+			html += "Angebot:<br /><ul>";
+			for( String o : offers ){
+				html += "<li>"+o+"</li>";
+			}
+			html += "</ul>";
 		}
 		
 		return html;
