@@ -177,12 +177,10 @@ public class Mensa {
 				Elements tables = doc.select("table");
 				
 				// add tables html
-				System.out.println("> tables " + tables.size());
 				for( Element e : tables ){					
 					html += e.outerHtml().replace( "src=\"..",
 							"src=\""+Settings.sh_mensa_url );					
-				}
-				
+				}				
 				
 			} catch (IOException e) {}			
 		}
