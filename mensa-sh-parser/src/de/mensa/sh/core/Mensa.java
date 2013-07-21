@@ -107,10 +107,19 @@ public class Mensa {
 								for( Element eOffer : elementOffers.select( "li" ))
 											mensaOffers.add( eOffer.text() );					
 							}
-								
+							
 							// get menue
-							Element elementMenue = e.select( "p > a[href]" ).last();
+							Elements elementsMenue = e.select( "a[href]" );
 							String mensaMenueURL = "";
+							Element elementMenue = null;
+							
+							for(Element el : elementsMenue){
+								if( el.text().contains("Speiseplan") ){
+									elementMenue = el;
+									break;
+								}
+							}
+							
 							if( elementMenue != null ){
 								mensaMenueURL = baseURL + elementMenue.attr("href");
 							}
@@ -154,7 +163,7 @@ public class Mensa {
 		html += Settings.getCssLink("allgemein.css");
 		html += Settings.getInlineCss();
 		
-		if( menueURL != "" ){			
+		if( menueURL.trim() != "" ){			
 			
 			try {
 				
@@ -168,6 +177,7 @@ public class Mensa {
 				Elements tables = doc.select("table");
 				
 				// add tables html
+				System.out.println("> tables " + tables.size());
 				for( Element e : tables ){					
 					html += e.outerHtml().replace( "src=\"..",
 							"src=\""+Settings.sh_mensa_url );					
