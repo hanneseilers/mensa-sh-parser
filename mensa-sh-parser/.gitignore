@@ -6,5 +6,9 @@
 *.ear
 *.apk
 
+# HTML files #
+.htm
+.html
+
 # bin fodler #
 /bin
