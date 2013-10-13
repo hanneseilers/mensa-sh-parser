@@ -22,6 +22,7 @@ public class Mensa {
 	private String lunchTime = "";
 	private List<String> offers = new ArrayList<String>();
 	private String menueURL = "";
+	private List<Meal> meals = null;
 	
 	/**
 	 * Constructor
@@ -150,6 +151,100 @@ public class Mensa {
 		} catch (IOException e) {}
 		
 		return locations;
+	}
+	
+	/**
+	 * @return List of meals of this mensa
+	 */
+	public List<Meal> getMeals(){
+		if(this.meals == null){
+			List<Meal> meals = new ArrayList<Meal>();
+			MenueLayout layoutMenue = null;
+			
+			Document doc = Jsoup.parse( getMenueAsHtml() );
+			Elements trElements = doc.select( "table" ).select( "tr" );
+			
+			// get menue layout
+			for( Element tr : trElements ){			
+				String trText = tr.text().toLowerCase();
+				if( trText.contains( "montag ") || trText.contains("mo ") ){
+					if( trText.contains("dienstag ") || trText.contains("di ") )
+						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_COLS;
+					else
+						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_ROWS;
+				}			
+			}
+			
+			// check if layout found
+			if( layoutMenue != null ){
+				boolean start = false;
+				
+				for( Element tr : trElements ){
+					
+					// COLUMN LAOUT
+					if( layoutMenue == MenueLayout.LAYOUT_DAYS_AS_COLS ){
+						// check if row contains information about meals
+						Elements tdElements = tr.select( "td" );					
+						if( tdElements.size() == 5 ){
+							
+							if(start){
+								// iterate over every cell in row
+								for( Element td : tdElements ){
+									// check if cell contains meal information
+									if( !td.text().contains("&euro;")
+											&& !td.text().contains("€")
+											&& td.text().trim().length() > 2 ){
+										
+										// add meal to list
+										meals.add( new Meal(td) );
+										
+									}
+								}
+							}
+							else{
+								start = true;
+							}
+							
+						}
+					}
+					
+					// ROW LAYOUT
+					else if( layoutMenue == MenueLayout.LAYOUT_DAYS_AS_ROWS ){
+						Elements tdElements = tr.select( "td" );
+						String tdElementsTxt = tdElements.text().toLowerCase();
+						
+						// check if row contains meals
+						if( tdElementsTxt.contains("montag ") || tdElementsTxt.contains("mo ")
+								|| tdElementsTxt.contains("dienstag ") || tdElementsTxt.contains("di ")
+								|| tdElementsTxt.contains("mittwoch ") || tdElementsTxt.contains("mi ")
+								|| tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")
+								|| tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ") ){
+							
+							// get  meals
+							for( Element td : tdElements ){
+								String txt = td.text().toLowerCase();
+								
+								if( txt.contains("montag ") || txt.contains("mo ") );
+								else if( txt.contains("dienstag ") || txt.contains("di ") );
+								else if( txt.contains("mittwoch ") || txt.contains("mi ") );
+								else if( txt.contains("donnerstag ") || txt.contains("do ") );
+								else if( txt.contains("freitag ") || txt.contains("fr ") );
+								else if( !txt.contains("&euro;") && !txt.contains("€")  ){
+									Meal meal = new Meal(td);
+									System.out.println("meal: " + meal);
+									meals.add( new Meal(td) );
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			
+			this.meals = meals;
+		}
+		
+		return this.meals;
 	}
 	
 	
