@@ -1,8 +1,16 @@
 package de.mensa.sh.core;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -298,6 +306,175 @@ public class Mensa {
 	
 	
 	/**
+	 * @param meal
+	 * @return rating of meal for this mensa
+	 * and -1 if no rating found or error occured
+	 */
+	public int getRating(Meal meal){		
+		try {
+			
+			// generate request 
+			String url = Settings.sh_mensa_meal_db_api_url + "?";
+			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
+			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
+			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
+			url += "&pig=" + bToI( meal.isPig() );
+			url += "&cow=" + bToI( meal.isCow() );
+			url += "&vege=" + bToI( meal.isVegetarian() );
+			url += "&vega=" + bToI( meal.isVegan() );
+			url += "&alc=" + bToI ( meal.isAlc() );
+					
+			// read response from online database
+			InputStream in = new URL( url ).openStream();
+			String ret = IOUtils.toString( in );
+			IOUtils.closeQuietly(in);			
+			
+			// get rating from response
+			if( ret.contains( DatabaseResponses.OK.value ) ){
+				String[] data = ret.split( "\\"+DatabaseResponses.SEPERATOR.value );
+				if( data.length >= 2 ){
+					try{
+						return Integer.parseInt(data[1]);
+					} catch(Exception e) {}
+				}
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Adds rating for meal of this mensa to database
+	 * @param meal
+	 * @param aRating
+	 * @return true if successfull
+	 */
+	public boolean addRating(Meal meal, int aRating, String comment, String hash){
+		try {
+			
+			// generate request 
+			String url = Settings.sh_mensa_meal_db_api_url + "?";
+			url += "f=addRating&loc=" + URLEncoder.encode( city, "UTF-8" );
+			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
+			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
+			url += "&pig=" + bToI( meal.isPig() );
+			url += "&cow=" + bToI( meal.isCow() );
+			url += "&vege=" + bToI( meal.isVegetarian() );
+			url += "&vega=" + bToI( meal.isVegan() );
+			url += "&alc=" + bToI ( meal.isAlc() );
+			url += "&rating=" + Integer.toString( aRating );
+			url += "&com=" + URLEncoder.encode( comment, "UTF-8" );
+			url += "&hash=" + URLEncoder.encode( hash, "UTF-8" );
+					
+			// read response from online database
+			InputStream in = new URL( url ).openStream();
+			String ret = IOUtils.toString( in );
+			IOUtils.closeQuietly(in);			
+			
+			// get rating from response
+			if( ret.contains( DatabaseResponses.OK.value ) ){
+				return true;
+			}
+			else{
+				System.out.println("ERROR: " + url);
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * @param meal
+	 * @return List of comments of a meal
+	 */
+	public List<String> getComments(Meal meal){
+		List<String> comments = new ArrayList<String>();
+		
+		try {
+			
+			// generate request 
+			String url = Settings.sh_mensa_meal_db_api_url + "?";
+			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
+			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
+			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
+			url += "&pig=" + bToI( meal.isPig() );
+			url += "&cow=" + bToI( meal.isCow() );
+			url += "&vege=" + bToI( meal.isVegetarian() );
+			url += "&vega=" + bToI( meal.isVegan() );
+			url += "&alc=" + bToI ( meal.isAlc() );
+					
+			// read response from online database
+			InputStream in = new URL( url ).openStream();
+			String ret = IOUtils.toString( in );
+			IOUtils.closeQuietly(in);			
+			
+			// get rating from response
+			if( ret.contains( DatabaseResponses.OK.value ) ){
+				String[] data = ret.split( DatabaseResponses.SEPERATOR.value );
+				if( data.length >= 2 ){
+					for( int i=1; i < data.length; i++ ){
+						String com = data[i].trim();
+						if( com.length() > 1 )
+							comments.add( com );
+					}
+				}
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return comments;
+	}
+	
+	/**
+	 * @param string
+	 * @return md5 hash of string
+	 */
+	public static String md5(String string){
+		MessageDigest md5;
+		try {
+			
+			md5 = MessageDigest.getInstance("MD5");
+			md5.reset();
+	        md5.update(string.getBytes());
+	        byte[] result = md5.digest();
+
+	        /* Ausgabe */
+	        StringBuffer hexString = new StringBuffer();
+	        for (int i=0; i<result.length; i++) {
+	            hexString.append(Integer.toHexString(0xFF & result[i]));
+	        }
+	        
+	        return hexString.toString();
+		} catch (NoSuchAlgorithmException 
+				e) {
+			e.printStackTrace();
+		}
+		
+		return "";        
+	}
+	
+	
+	/**
 	 * Prints mensa data
 	 */
 	public String toString(){
@@ -388,6 +565,15 @@ public class Mensa {
 	 */
 	public void setMeals(List<Meal> meals) {
 		this.meals = meals;
+	}
+	
+	
+	/**
+	 * @param b
+	 * @return integer 1 for true and 0 for false of boolean b
+	 */
+	public static int bToI(boolean b) {
+	    return b ? 1 : 0;
 	}
 	
 }

@@ -78,7 +78,9 @@ public class Meal {
 			else if( src.contains(sAlc) )
 				alc = true;
 		}
+		
 	}
+	
 	
 	/**
 	 * Generates string of meal

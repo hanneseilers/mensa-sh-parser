@@ -3,6 +3,7 @@ package de.mensa.sh.core;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Class for testing mensa library
@@ -23,6 +24,18 @@ public class Test {
 				// print data
 				System.out.println( "------------\n" + mensa );
 				System.out.println( "\tnum of meals tis week: " + mensa.getMeals().size() );
+				List<Meal> meals = mensa.getMeals();
+				if( meals.size() > 0 ){
+					Meal meal = meals.get( meals.size()-1 );
+					Integer rating = mensa.getRating(meal);
+					
+					// add rating if not rated jet
+					if( rating < 0 ){
+						mensa.addRating(meal, 3, "", "hannes");
+					}else{
+						System.out.println(rating + ": " + meal);
+					}
+				}
 				
 				// save menue as html file
 				try {
