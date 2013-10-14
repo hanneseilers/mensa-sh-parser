@@ -1,5 +1,7 @@
 package de.mensa.sh.core;
 
+import java.util.List;
+
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -170,6 +172,19 @@ public class Meal {
 	 */
 	public void setAlc(boolean alc) {
 		this.alc = alc;
+	}
+	
+	/**
+	 * @param mealList
+	 * @param meal
+	 * @return true if meal is in mealList
+	 */
+	public static boolean isMealInList(List<Meal> mealList, Meal meal){
+		for( Meal m : mealList ){
+			if( m.getMealName().equals(meal.getMealName()) )
+				return true;
+		}
+		return false;
 	}
 
 }

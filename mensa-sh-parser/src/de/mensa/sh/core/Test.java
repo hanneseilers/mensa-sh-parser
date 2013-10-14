@@ -22,10 +22,7 @@ public class Test {
 				
 				// print data
 				System.out.println( "------------\n" + mensa );
-				for( Meal meal : mensa.getMeals() ){
-					if(mensa.getName().equals("Mensa und Cafeteria Wedel (Wedel)"))
-						System.out.println(meal);
-				}
+				System.out.println( "\tnum of meals tis week: " + mensa.getMeals().size() );
 				
 				// save menue as html file
 				try {

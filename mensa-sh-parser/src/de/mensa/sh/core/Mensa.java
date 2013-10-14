@@ -3,7 +3,6 @@ package de.mensa.sh.core;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -196,7 +195,9 @@ public class Mensa {
 											&& td.text().trim().length() > 2 ){
 										
 										// add meal to list
-										meals.add( new Meal(td) );
+										Meal meal = new Meal(td);
+										if( !Meal.isMealInList(meals, meal) )
+											meals.add( meal );
 										
 									}
 								}
@@ -224,15 +225,17 @@ public class Mensa {
 							for( Element td : tdElements ){
 								String txt = td.text().toLowerCase();
 								
-								if( txt.contains("montag ") || txt.contains("mo ") );
-								else if( txt.contains("dienstag ") || txt.contains("di ") );
-								else if( txt.contains("mittwoch ") || txt.contains("mi ") );
-								else if( txt.contains("donnerstag ") || txt.contains("do ") );
-								else if( txt.contains("freitag ") || txt.contains("fr ") );
-								else if( !txt.contains("&euro;") && !txt.contains("€")  ){
+								if( !txt.contains("montag ") && !txt.contains("mo ")
+										&& !txt.contains("dienstag ") && !txt.contains("di ")
+										&& !txt.contains("mittwoch ") && !txt.contains("mi ")
+										&& !txt.contains("donnerstag ") && !txt.contains("do ")
+										&& !txt.contains("freitag ") && !txt.contains("fr ")
+										&& !txt.contains("&euro;") && !txt.contains("€")  ){
+									
+									// Add meal to list
 									Meal meal = new Meal(td);
-									System.out.println("meal: " + meal);
-									meals.add( new Meal(td) );
+									if( !Meal.isMealInList(meals, meal) )
+										meals.add( meal );
 								}
 							}
 						}
@@ -378,6 +381,13 @@ public class Mensa {
 	 */
 	public void setMenueURL(String menueURL) {
 		this.menueURL = menueURL;
+	}
+
+	/**
+	 * @param meals the meals to set
+	 */
+	public void setMeals(List<Meal> meals) {
+		this.meals = meals;
 	}
 	
 }
