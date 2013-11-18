@@ -13,6 +13,9 @@ public class Meal {
 	private boolean vegetarian = false;
 	private boolean vegan = false;
 	private boolean alc = false;
+	private String price = "";
+	private String date = "";
+	private int day = 0;
 	
 	/**
 	 * Constructor
@@ -29,9 +32,23 @@ public class Meal {
 		mealName = name;
 	}
 	
-	public Meal(Element mealHtmlElement){
+	public Meal(Element mealHtmlElement, Element priceHtmlElement, int setDay){
 		this(mealHtmlElement.text());
-		setParameter(mealHtmlElement);
+		day = setDay;
+		setParameter(mealHtmlElement, priceHtmlElement);
+	}
+	
+	public Meal(Element mealHtmlElement, Element priceHtmlElement, String setDate, int setDay){
+		this(mealHtmlElement.text());
+		day = setDay;
+		date = setDate;
+		setParameter(mealHtmlElement, priceHtmlElement);
+	}
+	
+	public Meal(Element mealHtmlElement, int setDay){
+		this(mealHtmlElement.text());
+		day = setDay;
+		setParameter(mealHtmlElement, null);
 	}
 	
 	/**
@@ -43,20 +60,22 @@ public class Meal {
 	 * @param vegan
 	 * @param alc
 	 */
-	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc){
+	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, int day){
 		mealName = name;
 		this.pig = pig;
 		this.cow = cow;
 		this.vegetarian = vegetarian;
 		this.vegan = vegan;
 		this.alc = alc;
+		this.price = price;
+		this.day = day;
 	}
 	
 	/**
 	 * Sets parameters from html element
 	 * @param htmlText
 	 */
-	private void setParameter(Element htmlElement){
+	private void setParameter(Element htmlElement, Element priceElement){
 		Elements imgElements = htmlElement.select("img");
 		String url = Settings.sh_mensa_meal_img_url;
 		String sPig = url + Settings.sh_mensa_meal_img_pig;
@@ -78,6 +97,11 @@ public class Meal {
 			else if( src.contains(sAlc) )
 				alc = true;
 		}
+		
+		if (priceElement != null){		
+			price = priceElement.text();
+		}
+		
 		
 	}
 	
@@ -174,6 +198,27 @@ public class Meal {
 	 */
 	public void setAlc(boolean alc) {
 		this.alc = alc;
+	}
+	
+	/**
+	 * @return the day
+	 */
+	public int getDay() {
+		return day;
+	}
+	
+	/**
+	 * @return the date
+	 */
+	public String getDate() {
+		return date;
+	}
+	
+	/**
+	 * @return the price
+	 */
+	public String getPrice() {
+		return price;
 	}
 	
 	/**
