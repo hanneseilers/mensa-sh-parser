@@ -9,6 +9,8 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
@@ -130,6 +132,8 @@ public class Mensa {
 							
 							if( elementMenue != null ){
 								mensaMenueURL = baseURL + elementMenue.attr("href");
+							} else {
+								continue;
 							}
 							
 							// add new mensa to list
@@ -175,7 +179,7 @@ public class Mensa {
 			for( Element tr : trElements ){			
 				String trText = tr.text().toLowerCase();
 				if( trText.contains( "montag ") || trText.contains("mo ") ){
-					if( trText.contains("dienstag ") || trText.contains("di ") )
+					if( trText.contains("dienstag ") || trText.contains("di ") || trText.contains("greenday ") )
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_COLS;
 					else
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_ROWS;
@@ -185,6 +189,7 @@ public class Mensa {
 			// check if layout found
 			if( layoutMenue != null ){
 				boolean start = false;
+				int i = 0;
 				
 				for( Element tr : trElements ){
 					
@@ -195,19 +200,30 @@ public class Mensa {
 						if( tdElements.size() == 5 ){
 							
 							if(start){
+								i = 0;
 								// iterate over every cell in row
 								for( Element td : tdElements ){
 									// check if cell contains meal information
 									if( !td.text().contains("&euro;")
+											&& !td.text().contains("\u20ac")
 											&& !td.text().contains("€")
 											&& td.text().trim().length() > 2 ){
 										
 										// add meal to list
-										Meal meal = new Meal(td);
-										if( !Meal.isMealInList(meals, meal) )
-											meals.add( meal );
-										
+										Meal meal;
+										Elements priceHtmlElements;
+										try {
+											priceHtmlElements = tr.nextElementSibling().select("td");
+										} catch (NullPointerException e) {
+											priceHtmlElements = new Elements();
+										}
+										if( priceHtmlElements.size() == 5 ){
+											meal = new Meal(td, priceHtmlElements.get(i), i);
+											if( !Meal.isMealInList(meals, meal) )
+												meals.add( meal );
+										}										
 									}
+									i++;
 								}
 							}
 							else{
@@ -229,6 +245,14 @@ public class Mensa {
 								|| tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")
 								|| tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ") ){
 							
+							if( tdElementsTxt.contains("montag ") || tdElementsTxt.contains("mo ")) { i = 0; }
+							if( tdElementsTxt.contains("dienstag ") || tdElementsTxt.contains("di ")) { i = 1; }
+							if( tdElementsTxt.contains("mittwoch ") || tdElementsTxt.contains("mi ")) { i = 2; }
+							if( tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")) { i = 3; }
+							if( tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ")) { i = 4; }
+							
+							String date = tr.select( "td" ).first().text().substring(tdElementsTxt.indexOf(" ")+1) + " ";
+							
 							// get  meals
 							for( Element td : tdElements ){
 								String txt = td.text().toLowerCase();
@@ -238,19 +262,28 @@ public class Mensa {
 										&& !txt.contains("mittwoch ") && !txt.contains("mi ")
 										&& !txt.contains("donnerstag ") && !txt.contains("do ")
 										&& !txt.contains("freitag ") && !txt.contains("fr ")
-										&& !txt.contains("&euro;") && !txt.contains("€")  ){
+										&& !txt.contains("&euro;") && !txt.contains("€") && !txt.contains("\u20ac") ){
 									
 									// Add meal to list
-									Meal meal = new Meal(td);
+									if(i>=5){i=0;};
+									Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
 									if( !Meal.isMealInList(meals, meal) )
 										meals.add( meal );
 								}
 							}
+							i++;
 						}
 					}
 				}
 				
 			}
+			
+			Collections.sort(meals, new Comparator<Meal>() {
+		        @Override
+		        public int compare(Meal s1, Meal s2) {
+		            return Integer.valueOf(s1.getDay()).compareTo(Integer.valueOf(s2.getDay()));
+		        }
+		    });
 			
 			this.meals = meals;
 		}
