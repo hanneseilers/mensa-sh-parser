@@ -16,5 +16,5 @@ public enum DatabaseResponses {
 	public String getValue(){
 		return value;
 	}
-	
+
 }

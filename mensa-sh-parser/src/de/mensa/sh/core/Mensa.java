@@ -5,9 +5,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,11 +43,11 @@ public class Mensa {
 	 * @param aMenueURL
 	 */
 	public Mensa(String aCity, String aName, String aLunchTime, List<String> aOffers, String aMenueURL){
-		city = aCity;
-		name = aName;
-		lunchTime = aLunchTime;
-		offers = aOffers;
-		menueURL = aMenueURL;
+		setCity(aCity);
+		setName(aName);
+		setLunchTime(aLunchTime);
+		setOffers(aOffers);
+		setMenueURL(aMenueURL);
 	}
 	
 	/**
@@ -348,14 +345,7 @@ public class Mensa {
 			
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
-			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
-			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
-			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
-			url += "&pig=" + bToI( meal.isPig() );
-			url += "&cow=" + bToI( meal.isCow() );
-			url += "&vege=" + bToI( meal.isVegetarian() );
-			url += "&vega=" + bToI( meal.isVegan() );
-			url += "&alc=" + bToI ( meal.isAlc() );
+			url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
 					
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
@@ -386,25 +376,15 @@ public class Mensa {
 	/**
 	 * Adds rating for meal of this mensa to database
 	 * @param meal
-	 * @param aRating
+	 * @param rating
 	 * @return true if successfull
 	 */
-	public boolean addRating(Meal meal, int aRating, String comment, String hash){
+	public boolean addRating(Meal meal, int rating, String comment, String hash){
 		try {
 			
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
-			url += "f=addRating&loc=" + URLEncoder.encode( city, "UTF-8" );
-			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
-			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
-			url += "&pig=" + bToI( meal.isPig() );
-			url += "&cow=" + bToI( meal.isCow() );
-			url += "&vege=" + bToI( meal.isVegetarian() );
-			url += "&vega=" + bToI( meal.isVegan() );
-			url += "&alc=" + bToI ( meal.isAlc() );
-			url += "&rating=" + Integer.toString( aRating );
-			url += "&com=" + URLEncoder.encode( comment, "UTF-8" );
-			url += "&hash=" + URLEncoder.encode( hash, "UTF-8" );
+			url += "f=addRating" + URLBuilder.buildURLParameter(this, meal, rating, comment, hash);
 					
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
@@ -441,14 +421,7 @@ public class Mensa {
 			
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
-			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
-			url += "&mensa=" + URLEncoder.encode( name, "UTF-8" );
-			url += "&meal=" + URLEncoder.encode( meal.getMealName(), "UTF-8" );
-			url += "&pig=" + bToI( meal.isPig() );
-			url += "&cow=" + bToI( meal.isCow() );
-			url += "&vege=" + bToI( meal.isVegetarian() );
-			url += "&vega=" + bToI( meal.isVegan() );
-			url += "&alc=" + bToI ( meal.isAlc() );
+			url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
 					
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
@@ -476,34 +449,6 @@ public class Mensa {
 		}
 		
 		return comments;
-	}
-	
-	/**
-	 * @param string
-	 * @return md5 hash of string
-	 */
-	public static String md5(String string){
-		MessageDigest md5;
-		try {
-			
-			md5 = MessageDigest.getInstance("MD5");
-			md5.reset();
-	        md5.update(string.getBytes());
-	        byte[] result = md5.digest();
-
-	        /* Ausgabe */
-	        StringBuffer hexString = new StringBuffer();
-	        for (int i=0; i<result.length; i++) {
-	            hexString.append(Integer.toHexString(0xFF & result[i]));
-	        }
-	        
-	        return hexString.toString();
-		} catch (NoSuchAlgorithmException 
-				e) {
-			e.printStackTrace();
-		}
-		
-		return "";        
 	}
 	
 	
@@ -598,15 +543,6 @@ public class Mensa {
 	 */
 	public void setMeals(List<Meal> meals) {
 		this.meals = meals;
-	}
-	
-	
-	/**
-	 * @param b
-	 * @return integer 1 for true and 0 for false of boolean b
-	 */
-	public static int bToI(boolean b) {
-	    return b ? 1 : 0;
 	}
 	
 }

@@ -29,25 +29,25 @@ public class Meal {
 	 */
 	public Meal(String name) {
 		this();
-		mealName = name;
+		setMealName(name);
 	}
 	
-	public Meal(Element mealHtmlElement, Element priceHtmlElement, int setDay){
+	public Meal(Element mealHtmlElement, Element priceHtmlElement, int day){
 		this(mealHtmlElement.text());
-		day = setDay;
+		setDay(day);
 		setParameter(mealHtmlElement, priceHtmlElement);
 	}
 	
-	public Meal(Element mealHtmlElement, Element priceHtmlElement, String setDate, int setDay){
+	public Meal(Element mealHtmlElement, Element priceHtmlElement, String date, int day){
 		this(mealHtmlElement.text());
-		day = setDay;
-		date = setDate;
+		setDay(day);
+		setDate(date);
 		setParameter(mealHtmlElement, priceHtmlElement);
 	}
 	
-	public Meal(Element mealHtmlElement, int setDay){
+	public Meal(Element mealHtmlElement, int day){
 		this(mealHtmlElement.text());
-		day = setDay;
+		setDay(day);
 		setParameter(mealHtmlElement, null);
 	}
 	
@@ -61,14 +61,14 @@ public class Meal {
 	 * @param alc
 	 */
 	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, int day){
-		mealName = name;
-		this.pig = pig;
-		this.cow = cow;
-		this.vegetarian = vegetarian;
-		this.vegan = vegan;
-		this.alc = alc;
-		this.price = price;
-		this.day = day;
+		setMealName(name);
+		setPig(pig);
+		setCow(cow);
+		setVegetarian(vegetarian);
+		setVegan(vegan);
+		setAlc(alc);
+		setPrice(price);
+		setDay(day);
 	}
 	
 	/**
@@ -219,6 +219,27 @@ public class Meal {
 	 */
 	public String getPrice() {
 		return price;
+	}
+
+	/**
+	 * @param price the price to set
+	 */
+	private void setPrice(String price) {
+		this.price = price;
+	}
+
+	/**
+	 * @param date the date to set
+	 */
+	private void setDate(String date) {
+		this.date = date;
+	}
+
+	/**
+	 * @param day the day to set
+	 */
+	private void setDay(int day) {
+		this.day = day;
 	}
 	
 	/**

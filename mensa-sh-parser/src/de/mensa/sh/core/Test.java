@@ -31,10 +31,9 @@ public class Test {
 					
 					// add rating if not rated jet
 					if( rating < 0 ){
-						mensa.addRating(meal, 3, "", "hannes");
-					}else{
-						System.out.println(rating + ": " + meal);
+						mensa.addRating(meal, 3, "", "test");
 					}
+					System.out.println(rating + ": " + meal);
 				}
 				
 				// save menue as html file
@@ -47,10 +46,13 @@ public class Test {
 					file.close();
 					System.out.println( "menue saved as " + mensa.getName()+".html" );
 					
-				} catch (IOException e) {}
+				} catch (IOException e) {}				
+				break;
 				
 			}
+			break;
 		}
+		
 	}
 
 }
