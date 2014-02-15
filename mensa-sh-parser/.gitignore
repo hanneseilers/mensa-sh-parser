@@ -1,14 +1,13 @@
 *.class
 
 # Package Files #
-*.jar
 *.war
 *.ear
 *.apk
 
 # HTML files #
-.htm
-.html
+*.htm
+*.html
 
 # bin fodler #
 /bin
