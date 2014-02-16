@@ -10,4 +10,4 @@
 *.html
 
 # bin fodler #
-/bin
+bin/
