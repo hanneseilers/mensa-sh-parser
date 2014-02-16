@@ -204,6 +204,7 @@ public class Mensa {
 									if( !td.text().contains("&euro;")
 											&& !td.text().contains("\u20ac")
 											&& !td.text().contains("€")
+											&& !td.text().contains("EUR")
 											&& td.text().trim().length() > 2 ){
 										
 										// add meal to list

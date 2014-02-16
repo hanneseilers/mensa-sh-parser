@@ -249,7 +249,7 @@ public class Meal {
 	 */
 	public static boolean isMealInList(List<Meal> mealList, Meal meal){
 		for( Meal m : mealList ){
-			if( m.getMealName().equals(meal.getMealName()) )
+			if( m.getMealName().equals(meal.getMealName()) && m.getDay() == meal.getDay() )
 				return true;
 		}
 		return false;
