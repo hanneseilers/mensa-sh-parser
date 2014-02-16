@@ -1,5 +1,9 @@
 package de.mensa.sh.core;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 /**
  * Class with settings
  * @author hannes
@@ -41,11 +45,25 @@ public class Settings {
 	 * @return inline css for replacing content of css files
 	 */
 	public static String getInlineCss(){
-		return "<style type=\"text/css\">body{"
-				+ "background-image: none;"
-				+ "background-color: #eeeeee;"
-				+ "}"
-				+ "</style>";
+		try {
+			
+			String css = "<style type=\"text/css\">";
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader( Settings.class.getResourceAsStream("inline.css") ) );
+			String line;
+		
+			while( (line=in.readLine()) != null ){
+				css += line + "\n";
+			}
+			
+			css += "</style>";
+			return css;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return "";
 	}
 	
 }

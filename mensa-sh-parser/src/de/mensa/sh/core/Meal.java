@@ -1,11 +1,12 @@
 package de.mensa.sh.core;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class Meal {
+public class Meal{
 	
 	private String mealName = "";
 	private boolean pig = false;
@@ -16,6 +17,8 @@ public class Meal {
 	private String price = "";
 	private String date = "";
 	private int day = 0;
+	
+	public final static int serialElements = 8;
 	
 	/**
 	 * Constructor
@@ -225,7 +228,7 @@ public class Meal {
 	 * @param price the price to set
 	 */
 	private void setPrice(String price) {
-		this.price = price;
+		this.price = URLBuilder.convertStringMutations(price);
 	}
 
 	/**
@@ -240,6 +243,73 @@ public class Meal {
 	 */
 	private void setDay(int day) {
 		this.day = day;
+	}
+	
+	
+	
+	/**
+	 * @return String of serialized object
+	 */
+	public static String serialize(Meal meal){
+		String serializedObject;
+		try {
+			
+			serializedObject = meal.getDate();
+			serializedObject += Mensa.serialSeperator + meal.getMealName();
+			serializedObject += Mensa.serialSeperator + meal.getPrice();
+			serializedObject += Mensa.serialSeperator + meal.isAlc();
+			serializedObject += Mensa.serialSeperator + meal.isCow();
+			serializedObject += Mensa.serialSeperator + meal.isPig();
+			serializedObject += Mensa.serialSeperator + meal.isVegan();
+			serializedObject += Mensa.serialSeperator + meal.isVegetarian();
+			
+			return URLBuilder.encode(serializedObject);
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		return "";
+	}
+	
+	/**
+	 * @param serializedObject
+	 * @return Meal from serialzed object string
+	 */
+	public static Meal unserialize(String serializedObject){
+try {
+			
+			serializedObject = URLBuilder.decode(serializedObject);		
+			String[] objectArray = serializedObject.split( Mensa.serialSeperator );
+
+			int offset = -1;			
+			if( objectArray.length == serialElements  ){				
+				// only meal data in string			
+				offset = 0;
+			}
+			else if( objectArray.length == Mensa.serialElements + serialElements ){				
+				// mensa and meal data in string
+				offset = Mensa.serialElements;
+			}
+			
+			if( offset > -1 ){
+				Meal meal = new Meal( objectArray[offset+1],
+							Boolean.parseBoolean( objectArray[offset+5] ),							
+							Boolean.parseBoolean( objectArray[offset+4] ),
+							Boolean.parseBoolean( objectArray[offset+7] ),
+							Boolean.parseBoolean( objectArray[offset+6] ),
+							Boolean.parseBoolean( objectArray[offset+3] ),
+							objectArray[offset+2],
+							0);
+				meal.setDate(objectArray[0]);
+				return meal;
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	/**

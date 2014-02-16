@@ -30,6 +30,10 @@ public class Mensa {
 	private String menueURL = "";
 	private List<Meal> meals = null;
 	
+	public final static String serialSeperator = "###"; 
+	public final static String serialListSeperator = "##";
+	public final static int serialElements = 4;
+	
 	/**
 	 * Constructor
 	 */
@@ -42,11 +46,26 @@ public class Mensa {
 	 * @param aOffers
 	 * @param aMenueURL
 	 */
+	@Deprecated
 	public Mensa(String aCity, String aName, String aLunchTime, List<String> aOffers, String aMenueURL){
 		setCity(aCity);
 		setName(aName);
 		setLunchTime(aLunchTime);
 		setOffers(aOffers);
+		setMenueURL(aMenueURL);
+	}
+	
+	/**
+	 * Constructor
+	 * @param aCity
+	 * @param aName
+	 * @param aLunchTime
+	 * @param aMenueURL
+	 */
+	public Mensa(String aCity, String aName, String aLunchTime, String aMenueURL){
+		setCity(aCity);
+		setName(aName);
+		setLunchTime(aLunchTime);
 		setMenueURL(aMenueURL);
 	}
 	
@@ -378,6 +397,7 @@ public class Mensa {
 	 * Adds rating for meal of this mensa to database
 	 * @param meal
 	 * @param rating
+	 * @param hash
 	 * @return true if successfull
 	 */
 	public boolean addRating(Meal meal, int rating, String comment, String hash){
@@ -493,6 +513,7 @@ public class Mensa {
 	/**
 	 * @return the offers
 	 */
+	@Deprecated
 	public List<String> getOffers() {
 		return offers;
 	}
@@ -528,6 +549,7 @@ public class Mensa {
 	/**
 	 * @param offers the offers to set
 	 */
+	@Deprecated
 	public void setOffers(List<String> offers) {
 		this.offers = offers;
 	}
@@ -546,4 +568,44 @@ public class Mensa {
 		this.meals = meals;
 	}
 	
+	/**
+	 * @return String of serialized object
+	 */
+	public static String serialize(Mensa mensa){
+		String serializedObject;
+		try {
+			
+			serializedObject = mensa.getCity();
+			serializedObject += serialSeperator + mensa.getLunchTime();
+			serializedObject += serialSeperator + mensa.getMenueURL();
+			serializedObject += serialSeperator + mensa.getName();
+			
+			return URLBuilder.encode(serializedObject);
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		return "";
+	}
+	
+	/**
+	 * @param serializedObject
+	 * @return Mensa from serialzed object string
+	 */
+	public static Mensa unserialize(String serializedObject){
+		try {
+			
+			serializedObject = URLBuilder.decode(serializedObject);		
+			String[] objectArray = serializedObject.split( serialSeperator );
+			if( objectArray.length >= serialElements  ){
+				return new Mensa( objectArray[0], objectArray[3], objectArray[1], objectArray[2] );
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 }

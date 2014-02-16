@@ -1,6 +1,7 @@
 package de.mensa.sh.core;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,6 +14,26 @@ public final class URLBuilder {
 	
 	private static final String encoding = "UTF-8";
 
+	
+	/**
+	 * @param data
+	 * @return Encoded data using URLEncoder
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String encode(String data) throws UnsupportedEncodingException{
+		return URLEncoder.encode( data, encoding );
+	}
+	
+	/**
+	 * @param data
+	 * @return Decoded data using URLDecoder
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String decode(String data) throws UnsupportedEncodingException{
+		return URLDecoder.decode( data, encoding );
+	}
+	
+	
 	/**
 	 * Builds parameters string for url
 	 * @param mensa
@@ -21,9 +42,9 @@ public final class URLBuilder {
 	 * @throws UnsupportedEncodingException
 	 */
 	public static String buildURLParameter(Mensa mensa, Meal meal) throws UnsupportedEncodingException{
-		String url = "&loc=" + URLEncoder.encode( convertStringMutations(mensa.getCity()), encoding );
-		url += "&mensa=" + URLEncoder.encode( convertStringMutations(mensa.getName()), encoding );
-		url += "&meal=" + URLEncoder.encode( convertStringMutations(meal.getMealName()), encoding );
+		String url = "&loc=" + encode( convertStringMutations(mensa.getCity()) );
+		url += "&mensa=" + encode( convertStringMutations(mensa.getName()) );
+		url += "&meal=" + encode( convertStringMutations(meal.getMealName()) );
 		url += "&pig=" + bToI( meal.isPig() );
 		url += "&cow=" + bToI( meal.isCow() );
 		url += "&vege=" + bToI( meal.isVegetarian() );
@@ -43,17 +64,17 @@ public final class URLBuilder {
 	 * @throws UnsupportedEncodingException
 	 */
 	public static String buildURLParameter(Mensa mensa, Meal meal, int rating, String comment, String hash) throws UnsupportedEncodingException{
-		String url = "&loc=" + URLEncoder.encode( convertStringMutations(mensa.getCity()), encoding );
-		url += "&mensa=" + URLEncoder.encode( convertStringMutations(mensa.getName()), encoding );
-		url += "&meal=" + URLEncoder.encode( convertStringMutations(meal.getMealName()), encoding );
+		String url = "&loc=" + encode( convertStringMutations(mensa.getCity()) );
+		url += "&mensa=" + encode( convertStringMutations(mensa.getName()) );
+		url += "&meal=" + encode( convertStringMutations(meal.getMealName()) );
 		url += "&pig=" + bToI( meal.isPig() );
 		url += "&cow=" + bToI( meal.isCow() );
 		url += "&vege=" + bToI( meal.isVegetarian() );
 		url += "&vega=" + bToI( meal.isVegan() );
 		url += "&alc=" + bToI ( meal.isAlc() );
 		url += "&rating=" + Integer.toString( rating );
-		url += "&com=" + URLEncoder.encode( md5(convertStringMutations(comment)), encoding );
-		url += "&hash=" + URLEncoder.encode( convertStringMutations(hash), encoding );
+		url += "&com=" + encode( convertStringMutations(comment) );
+		url += "&hash=" + encode( md5(convertStringMutations(hash)) );
 		return url;
 	}
 	
@@ -90,7 +111,7 @@ public final class URLBuilder {
 	 * @param s
 	 * @return 
 	 */
-	private static String convertStringMutations(String s){
+	public static String convertStringMutations(String s){
 		s = s.replace("ä", "ae");
 		s = s.replace("ö", "oe");
 		s = s.replace("ü", "ue");
