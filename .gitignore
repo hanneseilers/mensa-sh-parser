@@ -7,6 +7,6 @@
 
 # HTML files #
 *.htm
-*.html
+*.html # Bin Folder # 
 
 bin/
