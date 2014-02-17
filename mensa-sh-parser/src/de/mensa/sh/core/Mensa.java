@@ -393,7 +393,7 @@ public class Mensa {
 			try {
 				
 				// generate request 
-				String url = Settings.sh_mensa_meal_db_api_url + "?";
+				String url = Settings.sh_mensa_db_api_url + "?";
 				url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
 						
 				// read response from online database
@@ -435,7 +435,7 @@ public class Mensa {
 		try {
 			
 			// generate request 
-			String url = Settings.sh_mensa_meal_db_api_url + "?";
+			String url = Settings.sh_mensa_db_api_url + "?";
 			url += "f=addRating" + URLBuilder.buildURLParameter(this, meal, rating, comment, hash);
 			System.out.println("CALL: " + url);
 					
@@ -473,7 +473,7 @@ public class Mensa {
 		try {
 			
 			// generate request 
-			String url = Settings.sh_mensa_meal_db_api_url + "?";
+			String url = Settings.sh_mensa_db_api_url + "?";
 			url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
 					
 			// read response from online database
