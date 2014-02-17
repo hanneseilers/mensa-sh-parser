@@ -1,11 +1,16 @@
 package de.mensa.sh.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -122,6 +127,18 @@ public class Mensa {
 							// get name
 							String mensaName = elementName.text();
 							
+							/*
+							 * Check for mensa name without link
+							 * Typically than the link is for menu
+							 */
+							if( mensaName.contains("Speiseplan") ){
+								// Not mensa name
+								elementName = e.select("span").first();
+								if( elementName != null ){
+									mensaName = elementName.text();
+								}
+							}
+							
 							// get lunch time
 							Element elementLunchTime = e.select( "div" ).first();
 							String mensaLunchTime = "";
@@ -183,6 +200,20 @@ public class Mensa {
 	}
 	
 	/**
+	 * Checks if text contains price
+	 * @param text
+	 * @return
+	 */
+	public static boolean containsPrice(String text){
+		if( text.contains("&euro;")
+				|| text.contains("\u20ac")
+				|| text.contains("€")
+				|| text.contains("EUR") )
+			return true;
+		return false;
+	}
+	
+	/**
 	 * @return List of meals of this mensa
 	 */
 	public List<Meal> getMeals(){
@@ -201,7 +232,15 @@ public class Mensa {
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_COLS;
 					else
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_ROWS;
-				}			
+				}
+			}
+			
+			// Check if to use fallback on recognition of menu layout
+			if( layoutMenue == null ){
+				for( Element td : trElements.select("td") ){
+					if( layoutMenue == null && td.text().matches("\\d{2}[.]\\d{2}[.]") )
+						layoutMenue = MenueLayout.LAYOUT_MULTIPLE_WEEKS;
+				}
 			}
 			
 			// check if layout found
@@ -222,25 +261,32 @@ public class Mensa {
 								// iterate over every cell in row
 								for( Element td : tdElements ){
 									// check if cell contains meal information
-									if( !td.text().contains("&euro;")
-											&& !td.text().contains("\u20ac")
-											&& !td.text().contains("€")
-											&& !td.text().contains("EUR")
+									if( !containsPrice(td.text())
 											&& td.text().trim().length() > 2 ){
 										
 										// add meal to list
 										Meal meal;
 										Elements priceHtmlElements;
+										
 										try {
 											priceHtmlElements = tr.nextElementSibling().select("td");
 										} catch (NullPointerException e) {
 											priceHtmlElements = new Elements();
 										}
+										
 										if( priceHtmlElements.size() == 5 ){
-											meal = new Meal(td, priceHtmlElements.get(i), i);
+											
+											if( containsPrice(priceHtmlElements.text()) )
+												meal = new Meal(td, priceHtmlElements.get(i), i);
+											else
+												meal = new Meal(priceHtmlElements.get(i) , null, i);
+											
 											if( !Meal.isMealInList(meals, meal)
-													&& !meal.getMealName().trim().equals("Tagesangebot") )
+													&& !meal.getMealName().trim().equals("Tagesangebot")
+													&& !meal.getMealName().trim().contains("Tagesaushaenge")
+													&& !meal.getMealName().trim().contains("Tagesaushänge") ){
 												meals.add( meal );
+											}
 										}										
 									}
 									i++;
@@ -285,15 +331,76 @@ public class Mensa {
 										&& !txt.contains("&euro;") && !txt.contains("€") && !txt.contains("\u20ac") ){
 									
 									// Add meal to list
-									if(i>=5){i=0;};
+									if(i>4){
+										i=0;
+									};
 									Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
 									if( !Meal.isMealInList(meals, meal)
-											&& !meal.getMealName().trim().equals("Tagesangebot") )
+											&& !meal.getMealName().trim().equals("Tagesangebot")
+											&& !meal.getMealName().trim().contains("Tagesaushaenge")
+											&& !meal.getMealName().trim().contains("Tagesaushänge"))
 										meals.add( meal );
 								}
 							}
 							i++;
 						}
+					}
+					
+					// MULTIPLE WEEKS LAYOUT
+					else if( layoutMenue == MenueLayout.LAYOUT_MULTIPLE_WEEKS ){
+						Elements tdElements = tr.select( "td" );
+						Element td = tdElements.first();
+						
+						// check if row contains meals
+						if( tdElements.size() == 3
+								&& td.text().matches("\\d{2}[.]\\d{2}[.]") ){
+							try {
+							
+								// get date
+								Calendar calendar = Calendar.getInstance();
+								String dateString = td.text() + Integer.toString(calendar.get(Calendar.YEAR));
+							
+								calendar.setTime( (new SimpleDateFormat("dd.MM.yyyy")).parse(dateString) );
+								int day = calendar.get(Calendar.DAY_OF_WEEK);
+								String date;
+								
+								switch(day){
+								case 0:
+									date = "Montag";
+									break;
+								case 1:
+									date = "Dienstag";
+									break;
+								case 2:
+									date = "Mittwoch";
+									break;
+								case 3:
+									date = "Donnerstag";
+									break;
+								case 4:
+									date = "Freitag";
+									break;
+									
+								default:
+									date = "Montag";
+									break;
+									
+								}
+								
+								td = td.nextElementSibling();
+								Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
+								if( !Meal.isMealInList(meals, meal)
+										&& !meal.getMealName().trim().equals("Tagesangebot")
+										&& !meal.getMealName().trim().contains("Tagesaushaenge")
+										&& !meal.getMealName().trim().contains("Tagesaushänge"))
+									meals.add( meal );
+								
+								
+							} catch (ParseException e) {
+								e.printStackTrace();
+							}							
+						}
+						
 					}
 				}
 				
@@ -404,7 +511,7 @@ public class Mensa {
 				// get rating from response
 				if( ret.contains( DatabaseResponses.OK.value ) ){
 					String[] data = ret.split( "\\"+DatabaseResponses.SEPERATOR.value );
-					if( data.length >= 2 ){
+					if( data.length > 1 ){
 						try{
 							rating = Integer.parseInt(data[1]);
 						} catch(Exception e) {}
@@ -425,6 +532,42 @@ public class Mensa {
 	}
 	
 	/**
+	 * @param meals List of meals
+	 * @return Hashtable with meals key as identifier and rating for each meal in meal list.
+	 */
+	public Hashtable<String, Integer> getRatings(List<Meal> meals){
+		Hashtable<String, Integer> ratings = new Hashtable<String, Integer>();
+		
+		try {
+			
+			String url = Settings.sh_mensa_db_api_url + "?" + "f=getRatingQuery" + URLBuilder.buildURLParameter(this, meals);
+		
+			// read response from online database
+			InputStream in = new URL( url ).openStream();
+			BufferedReader reader = new BufferedReader( new InputStreamReader(in) );		
+			String line = reader.readLine();
+			
+			if( line != null && line.contains(DatabaseResponses.OK.value) ){		
+				
+					while( (line=reader.readLine()) != null ){
+						String[] data = line.split( "\\"+DatabaseResponses.SEPERATOR.value );
+						if( data.length > 1 ){
+								if( !data[1].equals(DatabaseResponses.NOT_FOUND.value) ){
+									ratings.put(data[0], Integer.parseInt(data[1]));
+								}
+						}
+					}
+				
+			}
+		
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return ratings;		
+	}
+	
+	/**
 	 * Adds rating for meal of this mensa to database
 	 * @param meal
 	 * @param rating
@@ -437,7 +580,6 @@ public class Mensa {
 			// generate request 
 			String url = Settings.sh_mensa_db_api_url + "?";
 			url += "f=addRating" + URLBuilder.buildURLParameter(this, meal, rating, comment, hash);
-			System.out.println("CALL: " + url);
 					
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
@@ -447,9 +589,6 @@ public class Mensa {
 			// get rating from response
 			if( ret.contains( DatabaseResponses.OK.value ) ){
 				return true;
-			}
-			else{
-				System.out.println("ERROR: " + url);
 			}
 			
 		} catch (UnsupportedEncodingException e) {

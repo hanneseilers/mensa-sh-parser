@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 /**
  * Builds urls
@@ -50,6 +51,28 @@ public final class URLBuilder {
 		url += "&vege=" + bToI( meal.isVegetarian() );
 		url += "&vega=" + bToI( meal.isVegan() );
 		url += "&alc=" + bToI ( meal.isAlc() );
+		return url;
+	}
+	
+	/**
+	 * Build parameters string for url from list of meals
+	 * @param mensa
+	 * @param meals
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String buildURLParameter(Mensa mensa, List<Meal> meals) throws UnsupportedEncodingException{
+		String url = "&loc=" + encode( convertStringMutations(mensa.getCity()) );
+		url += "&mensa=" + encode( convertStringMutations(mensa.getName()) );
+		url += "&query=";
+		
+		for( Meal meal : meals ){
+			if( !url.endsWith("=") ){
+				url+=DatabaseResponses.SEPERATOR.value;
+			}
+			url += encode( convertStringMutations(meal.getKey()) );
+		}
+		
 		return url;
 	}
 	
