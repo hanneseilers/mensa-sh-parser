@@ -74,6 +74,20 @@ public class Meal{
 		setDay(day);
 	}
 	
+	
+	/**
+	 * @return Unique key for this meal
+	 */
+	public String getKey(){
+		String key = URLBuilder.convertStringMutations(getMealName()).replace(" ", "_");
+		key += isPig() ? "1" : "0";
+		key += isCow() ? "1" : "0";
+		key += isVegetarian() ? "1" : "0";
+		key += isVegan() ? "1" : "0";
+		key += isAlc() ? "1" : "0";
+		return key;
+	}
+	
 	/**
 	 * Sets parameters from html element
 	 * @param htmlText
@@ -213,6 +227,7 @@ public class Meal{
 	/**
 	 * @return the date
 	 */
+	@Deprecated
 	public String getDate() {
 		return date;
 	}
@@ -234,6 +249,7 @@ public class Meal{
 	/**
 	 * @param date the date to set
 	 */
+	@Deprecated
 	private void setDate(String date) {
 		this.date = date;
 	}
@@ -254,9 +270,8 @@ public class Meal{
 		String serializedObject;
 		try {
 			
-			serializedObject = meal.getDate();
-			serializedObject += Mensa.serialSeperator + meal.getMealName();
-			serializedObject += Mensa.serialSeperator + meal.getPrice();
+			serializedObject = Mensa.serialSeperator + URLBuilder.convertStringMutations(meal.getMealName());
+			serializedObject += Mensa.serialSeperator + URLBuilder.convertStringMutations(meal.getPrice());
 			serializedObject += Mensa.serialSeperator + meal.isAlc();
 			serializedObject += Mensa.serialSeperator + meal.isCow();
 			serializedObject += Mensa.serialSeperator + meal.isPig();
@@ -301,7 +316,6 @@ try {
 							Boolean.parseBoolean( objectArray[offset+3] ),
 							objectArray[offset+2],
 							0);
-				meal.setDate(objectArray[0]);
 				return meal;
 			}
 			

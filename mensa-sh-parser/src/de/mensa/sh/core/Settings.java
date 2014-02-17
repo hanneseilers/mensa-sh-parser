@@ -15,6 +15,9 @@ public class Settings {
 	public static String sh_mensa_overview = "http://studentenwerk-s-h.de/seiten_essen/essen_plaene.html";	
 	public static String sh_mensa_css = "http://studentenwerk-s-h.de/css_stile/";
 	public static String sh_mensa_meal_db_api_url = "http://localhost/mensa-sh-rating/website/api.php";
+	public static String sh_mensa_meal_db_ico_full_url = "http://localhost/mensa-sh-rating/website/img/star.png";
+	public static String sh_mensa_meal_db_ico_empty_url = "http://localhost/mensa-sh-rating/website/img/star_empty.png";
+	public static String sh_mensa_meal_db_ico_half_url = "http://localhost/mensa-sh-rating/website/img/star_half.png";
 	
 	public static String sh_mensa_meal_img_url = "http://studentenwerk-s-h.de/bilder/bilder_essen/";
 	public static String sh_mensa_meal_img_pig = "logo_schwein.png";

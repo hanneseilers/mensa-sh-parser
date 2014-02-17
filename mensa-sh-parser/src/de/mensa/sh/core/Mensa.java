@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Hashtable;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
@@ -29,6 +30,8 @@ public class Mensa {
 	private List<String> offers = new ArrayList<String>();
 	private String menueURL = "";
 	private List<Meal> meals = null;
+	private String html = null;
+	private Hashtable<String, Integer> ratings = new Hashtable<String, Integer>(); 
 	
 	public final static String serialSeperator = "###"; 
 	public final static String serialListSeperator = "##";
@@ -236,7 +239,8 @@ public class Mensa {
 										}
 										if( priceHtmlElements.size() == 5 ){
 											meal = new Meal(td, priceHtmlElements.get(i), i);
-											if( !Meal.isMealInList(meals, meal) )
+											if( !Meal.isMealInList(meals, meal)
+													&& !meal.getMealName().trim().equals("Tagesangebot") )
 												meals.add( meal );
 										}										
 									}
@@ -284,7 +288,8 @@ public class Mensa {
 									// Add meal to list
 									if(i>=5){i=0;};
 									Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
-									if( !Meal.isMealInList(meals, meal) )
+									if( !Meal.isMealInList(meals, meal)
+											&& !meal.getMealName().trim().equals("Tagesangebot") )
 										meals.add( meal );
 								}
 							}
@@ -313,84 +318,111 @@ public class Mensa {
 	 * @return Menue table as html code
 	 */
 	public String getMenueAsHtml(){
-		String html = "";
-		
-		// add css files
-		html += Settings.getCssLink("allgemein.css");
-		html += Settings.getInlineCss();
-		
-		if( menueURL.trim() != "" ){			
+		if(html == null){
 			
-			try {
+			html = "";
+			
+			// add css files
+			html += Settings.getCssLink("allgemein.css");
+			html += Settings.getInlineCss();
+			
+			if( menueURL.trim() != "" ){			
 				
-				// get menue from url
-				Document doc = Jsoup.connect( menueURL ).get();
-				
-				// remove links to remote sites
-				// and unwrap all other links
-				doc.select("a[target=_blank]").remove();
-				doc.select("a").unwrap();
-				Elements tables = doc.select("table");
-				
-				// add tables html
-				for( Element e : tables ){					
-					html += e.outerHtml().replace( "src=\"..",
-							"src=\""+Settings.sh_mensa_url );					
-				}				
-				
-			} catch (IOException e) {}			
-		}
-		else {
-			// add mensa information
-			html += "<b>"+name+"</b><br />";
-			html += "Mittagessen: "+lunchTime+"<br />";
-			html += "Angebot:<br /><ul>";
-			for( String o : offers ){
-				html += "<li>"+o+"</li>";
+				try {
+					
+					// get menue from url
+					Document doc = Jsoup.connect( menueURL ).get();
+					
+					// remove links to remote sites
+					// and unwrap all other links
+					doc.select("a[target=_blank]").remove();
+					doc.select("a").unwrap();
+					Elements tables = doc.select("table");
+					
+					// add tables html
+					for( Element e : tables ){					
+						html += e.outerHtml().replace( "src=\"..",
+								"src=\""+Settings.sh_mensa_url );					
+					}				
+					
+				} catch (IOException e) {}			
 			}
-			html += "</ul>";
+			else {
+				// add mensa information
+				html += "<b>"+name+"</b><br />";
+				html += "Mittagessen: "+lunchTime+"<br />";
+				html += "Angebot:<br /><ul>";
+				for( String o : offers ){
+					html += "<li>"+o+"</li>";
+				}
+				html += "</ul>";
+			}
+			
 		}
 		
 		return html;
 	}
 	
-	
 	/**
 	 * @param meal
 	 * @return rating of meal for this mensa
+	 * and -1 if no rating found or error occured.
+	 * Rating is only updated online once
+	 */
+	public int getRating(Meal meal){
+		return getRating(meal, false);
+	}
+	
+	/**
+	 * @param meal
+	 * @paramn update If true the rating is updated online
+	 * @return rating of meal for this mensa
 	 * and -1 if no rating found or error occured
 	 */
-	public int getRating(Meal meal){		
-		try {
+	public int getRating(Meal meal, boolean update){
+		int rating = -1;
+		
+		if( ratings.containsKey(meal.getKey()) && !update ){
 			
-			// generate request 
-			String url = Settings.sh_mensa_meal_db_api_url + "?";
-			url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
-					
-			// read response from online database
-			InputStream in = new URL( url ).openStream();
-			String ret = IOUtils.toString( in );
-			IOUtils.closeQuietly(in);			
+			// chached rating
+			rating = ratings.get(meal.getKey());
 			
-			// get rating from response
-			if( ret.contains( DatabaseResponses.OK.value ) ){
-				String[] data = ret.split( "\\"+DatabaseResponses.SEPERATOR.value );
-				if( data.length >= 2 ){
-					try{
-						return Integer.parseInt(data[1]);
-					} catch(Exception e) {}
+		}
+		else{
+			
+			// rating not cached
+			try {
+				
+				// generate request 
+				String url = Settings.sh_mensa_meal_db_api_url + "?";
+				url += "f=getRating" + URLBuilder.buildURLParameter(this, meal);
+						
+				// read response from online database
+				InputStream in = new URL( url ).openStream();
+				String ret = IOUtils.toString( in );
+				IOUtils.closeQuietly(in);			
+				
+				// get rating from response
+				if( ret.contains( DatabaseResponses.OK.value ) ){
+					String[] data = ret.split( "\\"+DatabaseResponses.SEPERATOR.value );
+					if( data.length >= 2 ){
+						try{
+							rating = Integer.parseInt(data[1]);
+						} catch(Exception e) {}
+					}
 				}
+				
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 			
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
-		return -1;
+		return rating;
 	}
 	
 	/**
@@ -406,6 +438,7 @@ public class Mensa {
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
 			url += "f=addRating" + URLBuilder.buildURLParameter(this, meal, rating, comment, hash);
+			System.out.println("CALL: " + url);
 					
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
@@ -575,10 +608,10 @@ public class Mensa {
 		String serializedObject;
 		try {
 			
-			serializedObject = mensa.getCity();
-			serializedObject += serialSeperator + mensa.getLunchTime();
+			serializedObject = URLBuilder.convertStringMutations(mensa.getCity());
+			serializedObject += serialSeperator + URLBuilder.convertStringMutations(mensa.getLunchTime());
 			serializedObject += serialSeperator + mensa.getMenueURL();
-			serializedObject += serialSeperator + mensa.getName();
+			serializedObject += serialSeperator + URLBuilder.convertStringMutations(mensa.getName());
 			
 			return URLBuilder.encode(serializedObject);
 			
