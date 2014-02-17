@@ -49,7 +49,6 @@ public class Mensa {
 	 * @param aOffers
 	 * @param aMenueURL
 	 */
-	@Deprecated
 	public Mensa(String aCity, String aName, String aLunchTime, List<String> aOffers, String aMenueURL){
 		setCity(aCity);
 		setName(aName);
@@ -546,7 +545,6 @@ public class Mensa {
 	/**
 	 * @return the offers
 	 */
-	@Deprecated
 	public List<String> getOffers() {
 		return offers;
 	}
@@ -582,7 +580,6 @@ public class Mensa {
 	/**
 	 * @param offers the offers to set
 	 */
-	@Deprecated
 	public void setOffers(List<String> offers) {
 		this.offers = offers;
 	}
