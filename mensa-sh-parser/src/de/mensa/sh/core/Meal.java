@@ -17,6 +17,7 @@ public class Meal{
 	private String price = "";
 	private String date = "";
 	private int day = 0;
+	private int rating = 0;
 	
 	public final static int serialElements = 8;
 	
@@ -261,7 +262,19 @@ public class Meal{
 		this.day = day;
 	}
 	
+	/**
+	 * @param rating the rating to set
+	 */
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
 	
+	/**
+	 * @return rating the rating to set
+	 */
+	public int getRating() {
+		return rating;
+	}
 	
 	/**
 	 * @return String of serialized object
