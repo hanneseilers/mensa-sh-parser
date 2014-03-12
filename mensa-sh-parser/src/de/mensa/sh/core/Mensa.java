@@ -219,6 +219,7 @@ public class Mensa {
 	public List<Meal> getMeals(){
 		if(this.meals == null){
 			List<Meal> meals = new ArrayList<Meal>();
+			List<Element> prices = new ArrayList<Element>();
 			MenueLayout layoutMenue = null;
 			
 			Document doc = Jsoup.parse( getMenueAsHtml() );
@@ -317,9 +318,8 @@ public class Mensa {
 							if( tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")) { i = 3; }
 							if( tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ")) { i = 4; }
 							
-							String date = tr.select( "td" ).first().text().substring(tdElementsTxt.indexOf(" ")+1) + " ";
-							
 							// get  meals
+							int y = 0;
 							for( Element td : tdElements ){
 								String txt = td.text().toLowerCase();
 								
@@ -334,15 +334,45 @@ public class Mensa {
 									if(i>4){
 										i=0;
 									};
-									Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
+									
+									// check if price element contains currency
+									Element priceElement = td.nextElementSibling();
+									if( priceElement != null && !(priceElement.text().contains("€")
+											|| priceElement.text().contains("\u20ac")
+											|| priceElement.text().contains("&euro;")) ){
+										priceElement = null;									
+									}
+									
+									// try to get price from price list if priceElement = null
+									if( priceElement == null && y < prices.size() ){
+										priceElement = prices.get(y);
+									}									
+									
+									
+									// add meal to list
+									Meal meal = new Meal(td, priceElement, i);						
 									if( !Meal.isMealInList(meals, meal)
 											&& !meal.getMealName().trim().equals("Tagesangebot")
 											&& !meal.getMealName().trim().contains("Tagesaushaenge")
-											&& !meal.getMealName().trim().contains("Tagesaushänge"))
+											&& !meal.getMealName().trim().contains("Tagesaushänge")){
 										meals.add( meal );
+									}
+									
+									y++;
 								}
 							}
 							i++;
+						}
+						// check if row contains prices
+						else if( tdElementsTxt.contains("preis") ){
+													
+							for( Element td : tdElements ){
+								String txt = td.text().toLowerCase();								
+								if( txt.contains("&euro;") || txt.contains("€") || txt.contains("\u20ac") ){
+									prices.add(td);
+								}								
+							}
+							
 						}
 					}
 					
@@ -361,34 +391,16 @@ public class Mensa {
 								String dateString = td.text() + Integer.toString(calendar.get(Calendar.YEAR));
 							
 								calendar.setTime( (new SimpleDateFormat("dd.MM.yyyy")).parse(dateString) );
-								int day = calendar.get(Calendar.DAY_OF_WEEK);
-								String date;
+								int day = calendar.get(Calendar.DAY_OF_WEEK)-2;
+								int tmpWeekOfYear = calendar.get(Calendar.WEEK_OF_YEAR);
 								
-								switch(day){
-								case 0:
-									date = "Montag";
-									break;
-								case 1:
-									date = "Dienstag";
-									break;
-								case 2:
-									date = "Mittwoch";
-									break;
-								case 3:
-									date = "Donnerstag";
-									break;
-								case 4:
-									date = "Freitag";
-									break;
-									
-								default:
-									date = "Montag";
-									break;
-									
+								// skip if entry is not from current week
+								if( tmpWeekOfYear != Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) ){
+									continue;
 								}
 								
 								td = td.nextElementSibling();
-								Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
+								Meal meal = new Meal(td, td.nextElementSibling(), day);						
 								if( !Meal.isMealInList(meals, meal)
 										&& !meal.getMealName().trim().equals("Tagesangebot")
 										&& !meal.getMealName().trim().contains("Tagesaushaenge")

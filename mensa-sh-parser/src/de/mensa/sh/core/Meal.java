@@ -42,6 +42,7 @@ public class Meal{
 		setParameter(mealHtmlElement, priceHtmlElement);
 	}
 	
+	@Deprecated
 	public Meal(Element mealHtmlElement, Element priceHtmlElement, String date, int day){
 		this(mealHtmlElement.text());
 		setDay(day);
