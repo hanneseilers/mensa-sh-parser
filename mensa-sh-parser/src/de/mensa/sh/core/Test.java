@@ -24,10 +24,6 @@ public class Test {
 		for( String city : Mensa.getCities() ){
 			for( Mensa mensa : Mensa.getLocations(city) ){
 				
-				if( mensa.getName().contains("Wedel") ){
-					continue;
-				}
-				
 				// Get list of meals
 				List<Meal> meals = mensa.getMeals();
 				
