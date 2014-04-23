@@ -38,6 +38,7 @@ public class Mensa {
 	private String html = null;
 	private Hashtable<String, Integer> ratings = new Hashtable<String, Integer>(); 
 	
+	public final static String skipClassNames = "mitteilung";
 	public final static String serialSeperator = "###"; 
 	public final static String serialListSeperator = "##";
 	public final static int serialElements = 4;
@@ -229,10 +230,12 @@ public class Mensa {
 			for( Element tr : trElements ){			
 				String trText = tr.text().toLowerCase();
 				if( trText.contains( "montag ") || trText.contains("mo ") ){
-					if( trText.contains("dienstag ") || trText.contains("di ") || trText.contains("greenday ") )
+					if( trText.contains("dienstag ") || trText.contains("di ") || trText.contains("greenday ") ){
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_COLS;
-					else
+					} else {
 						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_ROWS;
+					}
+					break;
 				}
 			}
 			
@@ -243,6 +246,8 @@ public class Mensa {
 						layoutMenue = MenueLayout.LAYOUT_MULTIPLE_WEEKS;
 				}
 			}
+			
+			System.out.println("LAYOUT: " + layoutMenue);
 			
 			// check if layout found
 			if( layoutMenue != null ){
@@ -282,10 +287,14 @@ public class Mensa {
 											else
 												meal = new Meal(priceHtmlElements.get(i) , null, i);
 											
+											String mealName = meal.getMealName().trim();
 											if( !Meal.isMealInList(meals, meal)
-													&& !meal.getMealName().trim().equals("Tagesangebot")
-													&& !meal.getMealName().trim().contains("Tagesaushaenge")
-													&& !meal.getMealName().trim().contains("Tagesaushänge") ){
+													&& !td.attr("class").contains(skipClassNames)
+													&& mealName.length() > 2
+													
+													&& !mealName.equals("Tagesangebot")
+													&& !mealName.contains("Tagesaushaenge")
+													&& !mealName.contains("Tagesaushänge") ){
 												meals.add( meal );
 											}
 										}										
@@ -350,11 +359,15 @@ public class Mensa {
 									
 									
 									// add meal to list
-									Meal meal = new Meal(td, priceElement, i);						
+									Meal meal = new Meal(td, priceElement, i);	
+									String mealName = meal.getMealName().trim();
 									if( !Meal.isMealInList(meals, meal)
-											&& !meal.getMealName().trim().equals("Tagesangebot")
-											&& !meal.getMealName().trim().contains("Tagesaushaenge")
-											&& !meal.getMealName().trim().contains("Tagesaushänge")){
+											&& !td.attr("class").contains(skipClassNames)
+											&& mealName.length() > 2
+											
+											&& !mealName.equals("Tagesangebot")
+											&& !mealName.contains("Tagesaushaenge")
+											&& !mealName.contains("Tagesaushänge")){
 										meals.add( meal );
 									}
 									
@@ -400,11 +413,16 @@ public class Mensa {
 								}
 								
 								td = td.nextElementSibling();
-								Meal meal = new Meal(td, td.nextElementSibling(), day);						
+								Meal meal = new Meal(td, td.nextElementSibling(), day);
+								
+								String mealName = meal.getMealName().trim();
 								if( !Meal.isMealInList(meals, meal)
-										&& !meal.getMealName().trim().equals("Tagesangebot")
-										&& !meal.getMealName().trim().contains("Tagesaushaenge")
-										&& !meal.getMealName().trim().contains("Tagesaushänge"))
+										&& !td.attr("class").contains(skipClassNames)
+										&& mealName.length() > 2
+										
+										&& !mealName.equals("Tagesangebot")
+										&& !mealName.contains("Tagesaushaenge")
+										&& !mealName.contains("Tagesaushänge"))
 									meals.add( meal );
 								
 								
