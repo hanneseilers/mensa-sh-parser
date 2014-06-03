@@ -180,7 +180,8 @@ public class Mensa {
 				Document doc = Jsoup.connect( getMenueURL() ).get();
 				Element menu = doc.select(".menu").first();
 				if(menu != null) {
-					for(Element week:menu.select("#days")) {
+					//for(Element week:menu.select("#days")) { We could get the next week using this, but the app needs to be changed for that
+					Element week = menu.select("#days").first();
 						for(Element day:week.select(".day")) {
 							String date = day.select("table tr th").first().text();
 							Pattern pattern = Pattern.compile("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d");
@@ -194,7 +195,7 @@ public class Mensa {
 								meals.add(meal);
 							}
 						}
-					}
+					//}
 				}
 
 				Collections.sort(meals, new Comparator<Meal>() {

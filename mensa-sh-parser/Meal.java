@@ -1,6 +1,5 @@
 package de.mensa.sh.core;
 
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -38,7 +37,7 @@ public class Meal {
 		mealName = name;
 	}
 	
-	public Meal(Element mealTr, String setDate) throws ParseException {
+	public Meal(Element mealTr, String setDate) throws ParseException{
 		this();
 		date = new SimpleDateFormat("dd.MM.yyyy").parse(setDate);
 		setParameter(mealTr);
@@ -65,16 +64,16 @@ public class Meal {
 	}
 	
 	/**
-	 * @return Unique key for this meal
-	 */
-	public String getKey(){
-		String key = URLBuilder.convertStringMutations(getMealName()).replace(" ", "_");
-		key += isPig() ? "1" : "0";
-		key += isCow() ? "1" : "0";
-		key += isVegetarian() ? "1" : "0";
-		key += isVegan() ? "1" : "0";
-		key += isAlc() ? "1" : "0";
-		return key;
+ 	 * @return Unique key for this meal
+ 	 */
+ 	public String getKey(){
+ 		String key = URLBuilder.convertStringMutations(getMealName()).replace(" ", "_");
+ 		key += isPig() ? "1" : "0";
+ 		key += isCow() ? "1" : "0";
+ 		key += isVegetarian() ? "1" : "0";
+ 		key += isVegan() ? "1" : "0";
+ 		key += isAlc() ? "1" : "0";
+ 		return key;
 	}
 	
 	/**
@@ -211,13 +210,20 @@ public class Meal {
 	public int getDay() {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
-		return cal.get(Calendar.DAY_OF_WEEK) - 2;
+		return cal.get(Calendar.DAY_OF_WEEK);
 	}
 	
 	/**
 	 * @return the date
 	 */
-	public String getDate() {
+	public Date getDate() {
+		return date;
+	}
+	
+	/**
+	 * @return the date
+	 */
+	public String getDateString() {
 		return new SimpleDateFormat("dd.MM.yyyy").format(date);
 	}
 	
@@ -234,21 +240,21 @@ public class Meal {
 	public void setRating(int rating) {
 		this.rating = rating;
 	}
-
+	
 	/**
 	 * @return rating the rating to set
 	 */
 	public int getRating() {
 		return rating;
 	}
-
+	
 	/**
 	 * @return String of serialized object
 	 */
 	public static String serialize(Meal meal){
 		String serializedObject;
 		try {
-
+			
 			serializedObject = Mensa.serialSeperator + URLBuilder.convertStringMutations(meal.getMealName());
 			serializedObject += Mensa.serialSeperator + URLBuilder.convertStringMutations(meal.getPrice());
 			serializedObject += Mensa.serialSeperator + meal.isAlc();
@@ -256,23 +262,23 @@ public class Meal {
 			serializedObject += Mensa.serialSeperator + meal.isPig();
 			serializedObject += Mensa.serialSeperator + meal.isVegan();
 			serializedObject += Mensa.serialSeperator + meal.isVegetarian();
-
+			
 			return URLBuilder.encode(serializedObject);
-
+			
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
-
+		
 		return "";
 	}
-
+	
 	/**
 	 * @param serializedObject
 	 * @return Meal from serialzed object string
 	 */
 	public static Meal unserialize(String serializedObject){
-		try {
-
+try {
+			
 			serializedObject = URLBuilder.decode(serializedObject);		
 			String[] objectArray = serializedObject.split( Mensa.serialSeperator );
 
@@ -285,7 +291,7 @@ public class Meal {
 				// mensa and meal data in string
 				offset = Mensa.serialElements;
 			}
-
+			
 			if( offset > -1 ){
 				Meal meal = new Meal( objectArray[offset+1],
 							Boolean.parseBoolean( objectArray[offset+5] ),							
@@ -294,14 +300,14 @@ public class Meal {
 							Boolean.parseBoolean( objectArray[offset+6] ),
 							Boolean.parseBoolean( objectArray[offset+3] ),
 							objectArray[offset+2],
-							null);
+							0);
 				return meal;
 			}
-
+			
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
-
+		
 		return null;
 	}
 	
