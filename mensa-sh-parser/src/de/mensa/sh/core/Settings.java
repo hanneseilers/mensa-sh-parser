@@ -1,5 +1,9 @@
 package de.mensa.sh.core;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 /**
  * Class with settings
  * @author hannes
@@ -8,9 +12,13 @@ package de.mensa.sh.core;
 public class Settings {
 
 	public static String sh_mensa_url = "http://studentenwerk-sh.eu/";
-	public static String sh_mensa_overview = "http://studentenwerk-sh.eu/essen/standorte/index.html";	
+	public static String sh_mensa_overview = "http://studentenwerk-sh.eu/de/essen/standorte/index.html";	
 	public static String sh_mensa_css = "http://studentenwerk-s-h.de/css_stile/";
-	public static String sh_mensa_meal_db_api_url = "http://192.168.0.106/mensash/api.php";
+	public static String sh_mensa_db_api_url = "http://localhost/mensa-sh-rating/website/api.php";
+	public static String sh_mensa_rating_ico_full_url = "http://localhost/mensa-sh-rating/website/img/star.png";
+	public static String sh_mensa_rating_ico_empty_url = "http://localhost/mensa-sh-rating/website/img/star_empty.png";
+	public static String sh_mensa_rating_ico_half_url = "http://localhost/mensa-sh-rating/website/img/star_half.png";
+	public static String sh_mensa_rating_ico_size = "16px";
 	
 	public static String sh_mensa_meal_img_url = "http://studentenwerk-sh.eu/cms/css/img/menu/";
 	public static String sh_mensa_meal_img_pig = "iconProp_s.hd.png";
@@ -41,11 +49,25 @@ public class Settings {
 	 * @return inline css for replacing content of css files
 	 */
 	public static String getInlineCss(){
-		return "<style type=\"text/css\">body{"
-				+ "background-image: none;"
-				+ "background-color: #eeeeee;"
-				+ "}"
-				+ "</style>";
+		try {
+			
+			String css = "<style type=\"text/css\">";
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader( Settings.class.getResourceAsStream("inline.css") ) );
+			String line;
+		
+			while( (line=in.readLine()) != null ){
+				css += line + "\n";
+			}
+			
+			css += "</style>";
+			return css;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return "";
 	}
 	
 }
