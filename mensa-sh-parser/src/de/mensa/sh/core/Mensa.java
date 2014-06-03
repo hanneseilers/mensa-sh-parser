@@ -8,10 +8,14 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,12 +36,12 @@ public class Mensa {
 	private List<String> offers = new ArrayList<String>();
 	private String menueURL = "";
 	private List<Meal> meals = null;
-	
+
 	/**
 	 * Constructor
 	 */
 	public Mensa(){	}
-	
+
 	/**
 	 * Constructor
 	 * @param aName
@@ -52,28 +56,28 @@ public class Mensa {
 		offers = aOffers;
 		menueURL = aMenueURL;
 	}
-	
+
 	/**
 	 * @return Available cities with a mensa
 	 */
 	public static List<String> getCities(){
 		List<String> cities = new ArrayList<String>();
-		
+
 		try {
-			
+
 			Document doc = Jsoup.connect( Settings.sh_mensa_overview ).get();
-			Elements htmlElements = doc.select( "td > h1" );
-			
+			Elements htmlElements = doc.select( "#menuCitySelect option:not([value=0])" );
+
 			// get locations			
 			for( Element e : htmlElements ){
 				cities.add( e.text() );
 			}
-			
+
 		} catch (IOException e) {}
-		
+
 		return cities;
 	}
-	
+
 	/**
 	 * Gets all locations of a city 
 	 * @param aCity
@@ -81,246 +85,132 @@ public class Mensa {
 	 */
 	public static List<Mensa> getLocations(String aCity){
 		List<Mensa> locations = new ArrayList<Mensa>();
-		
+
 		try {
-			
+
 			Document doc = Jsoup.connect( Settings.sh_mensa_overview ).get();
-			Elements htmlElements = doc.select( "table" ).select( "tr" );
-			String baseURL = Settings.sh_mensa_overview.substring( 0,
-					Settings.sh_mensa_overview.lastIndexOf('/')+1 );
-			
+			Elements htmlElements = doc.select( "#menuCitySelect option:not([value=0])" );
+
+
+			//			htmlElements = doc.select( "table" ).select( "tr" );
+			//			String baseURL = Settings.sh_mensa_overview.substring( 0,
+			//					Settings.sh_mensa_overview.lastIndexOf('/')+1 );
+
 			// find city and locations
-			boolean cityFound = false;
 			for( Element e : htmlElements ){
-				
-				// check if city was found
-				if( cityFound ){					
-					// check if entry corresponds to searched city
-					if( e.select("td > h1").size() == 0 ){
-						
-						// get mensa data
-						Element elementName = e.select( "a[href]" ).first();
-						if( elementName != null ){							
-							// get name
-							String mensaName = elementName.text();
-							
-							// get lunch time
-							Element elementLunchTime = e.select( "div" ).first();
-							String mensaLunchTime = "";
-							if( elementLunchTime != null )
-								mensaLunchTime = elementLunchTime.text();
-							
-							// get offers
-							Element elementOffers = e.select( "ul" ).last();
-							List<String> mensaOffers = new ArrayList<String>();
-							if( elementOffers != null ){								
-								for( Element eOffer : elementOffers.select( "li" ))
-											mensaOffers.add( eOffer.text() );					
-							}
-							
-							// get menue
-							Elements elementsMenue = e.select( "a[href]" );
-							String mensaMenueURL = "";
-							Element elementMenue = null;
-							
-							for(Element el : elementsMenue){
-								if( el.text().contains("Speiseplan") ){
-									elementMenue = el;
-									break;
-								}
-							}
-							
-							if( elementMenue != null ){
-								mensaMenueURL = baseURL + elementMenue.attr("href");
-							} else {
-								continue;
-							}
-							
-							// add new mensa to list
-							locations.add( new Mensa(
-									aCity,
-									mensaName,
-									mensaLunchTime,
-									mensaOffers,
-									mensaMenueURL) );
-							
-						}						
-					}
-					else{
-						cityFound = false;
-					}
-					
-				}
-				
-				// check if elements contains city
+
 				if( e.text().contains( aCity ) ){
-					cityFound = true;
+					Elements mensaElements = doc.select(".menuMensaSelect.city_" + e.attr("value") + " option[value]");
+					for(Element element:mensaElements) {
+						// get name
+						String mensaName = element.text();
+						String url = Settings.sh_mensa_url + element.attr("value").substring(1);
+
+						Document doc2 = Jsoup.connect(url).get();
+
+						// get lunch time
+						Element elementLunchTime = doc2.select( ".htmlcontent:contains(�ffnungszeiten)" ).first();
+						String mensaLunchTime = "";
+						if( elementLunchTime != null )
+							mensaLunchTime = elementLunchTime.text();
+
+						// get offers
+						List<String> mensaOffers = new ArrayList<String>();
+						String mensaMenueUrl = url.replace("index.html", "speiseplan.html");
+
+						// add new mensa to list
+						locations.add( new Mensa(
+								aCity,
+								mensaName,
+								mensaLunchTime,
+								mensaOffers,
+								mensaMenueUrl) );
+					}
+					break;
 				}
-				
+
+
+
 			}
-			
+
 		} catch (IOException e) {}
-		
+
 		return locations;
 	}
-	
+
 	/**
 	 * @return List of meals of this mensa
 	 */
 	public List<Meal> getMeals(){
 		if(this.meals == null){
 			List<Meal> meals = new ArrayList<Meal>();
-			MenueLayout layoutMenue = null;
-			
-			Document doc = Jsoup.parse( getMenueAsHtml() );
-			Elements trElements = doc.select( "table" ).select( "tr" );
-			
-			// get menue layout
-			for( Element tr : trElements ){			
-				String trText = tr.text().toLowerCase();
-				if( trText.contains( "montag ") || trText.contains("mo ") ){
-					if( trText.contains("dienstag ") || trText.contains("di ") || trText.contains("greenday ") )
-						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_COLS;
-					else
-						layoutMenue = MenueLayout.LAYOUT_DAYS_AS_ROWS;
-				}			
-			}
-			
-			// check if layout found
-			if( layoutMenue != null ){
-				boolean start = false;
-				int i = 0;
-				
-				for( Element tr : trElements ){
-					
-					// COLUMN LAOUT
-					if( layoutMenue == MenueLayout.LAYOUT_DAYS_AS_COLS ){
-						// check if row contains information about meals
-						Elements tdElements = tr.select( "td" );					
-						if( tdElements.size() == 5 ){
-							
-							if(start){
-								i = 0;
-								// iterate over every cell in row
-								for( Element td : tdElements ){
-									// check if cell contains meal information
-									if( !td.text().contains("&euro;")
-											&& !td.text().contains("\u20ac")
-											&& !td.text().contains("€")
-											&& td.text().trim().length() > 2 ){
-										
-										// add meal to list
-										Meal meal;
-										Elements priceHtmlElements;
-										try {
-											priceHtmlElements = tr.nextElementSibling().select("td");
-										} catch (NullPointerException e) {
-											priceHtmlElements = new Elements();
-										}
-										if( priceHtmlElements.size() == 5 ){
-											meal = new Meal(td, priceHtmlElements.get(i), i);
-											if( !Meal.isMealInList(meals, meal) )
-												meals.add( meal );
-										}										
-									}
-									i++;
-								}
+
+			try {
+				Document doc = Jsoup.connect( getMenueURL() ).get();
+				Element menu = doc.select(".menu").first();
+				if(menu != null) {
+					for(Element week:menu.select("#days")) {
+						for(Element day:week.select(".day")) {
+							String date = day.select("table tr th").first().text();
+							Pattern pattern = Pattern.compile("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d");
+							Matcher matcher = pattern.matcher(date);
+							if(matcher.find()) {
+								date = matcher.group();
 							}
-							else{
-								start = true;
+							Elements trElements = day.select( "tr.even, tr.odd" );
+							for( Element tr : trElements ){	
+								Meal meal = new Meal(tr, date);
+								meals.add(meal);
 							}
-							
-						}
-					}
-					
-					// ROW LAYOUT
-					else if( layoutMenue == MenueLayout.LAYOUT_DAYS_AS_ROWS ){
-						Elements tdElements = tr.select( "td" );
-						String tdElementsTxt = tdElements.text().toLowerCase();
-						
-						// check if row contains meals
-						if( tdElementsTxt.contains("montag ") || tdElementsTxt.contains("mo ")
-								|| tdElementsTxt.contains("dienstag ") || tdElementsTxt.contains("di ")
-								|| tdElementsTxt.contains("mittwoch ") || tdElementsTxt.contains("mi ")
-								|| tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")
-								|| tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ") ){
-							
-							if( tdElementsTxt.contains("montag ") || tdElementsTxt.contains("mo ")) { i = 0; }
-							if( tdElementsTxt.contains("dienstag ") || tdElementsTxt.contains("di ")) { i = 1; }
-							if( tdElementsTxt.contains("mittwoch ") || tdElementsTxt.contains("mi ")) { i = 2; }
-							if( tdElementsTxt.contains("donnerstag ") || tdElementsTxt.contains("do ")) { i = 3; }
-							if( tdElementsTxt.contains("freitag ") || tdElementsTxt.contains("fr ")) { i = 4; }
-							
-							String date = tr.select( "td" ).first().text().substring(tdElementsTxt.indexOf(" ")+1) + " ";
-							
-							// get  meals
-							for( Element td : tdElements ){
-								String txt = td.text().toLowerCase();
-								
-								if( !txt.contains("montag ") && !txt.contains("mo ")
-										&& !txt.contains("dienstag ") && !txt.contains("di ")
-										&& !txt.contains("mittwoch ") && !txt.contains("mi ")
-										&& !txt.contains("donnerstag ") && !txt.contains("do ")
-										&& !txt.contains("freitag ") && !txt.contains("fr ")
-										&& !txt.contains("&euro;") && !txt.contains("€") && !txt.contains("\u20ac") ){
-									
-									// Add meal to list
-									if(i>=5){i=0;};
-									Meal meal = new Meal(td, td.nextElementSibling(), date, i);						
-									if( !Meal.isMealInList(meals, meal) )
-										meals.add( meal );
-								}
-							}
-							i++;
 						}
 					}
 				}
-				
+
+				Collections.sort(meals, new Comparator<Meal>() {
+					@Override
+					public int compare(Meal s1, Meal s2) {
+						return s1.getDate().compareTo(s2.getDate());
+					}
+				});
+
+				this.meals = meals;
+			} catch (IOException e1) {
+			} catch (ParseException e) {
 			}
-			
-			Collections.sort(meals, new Comparator<Meal>() {
-		        @Override
-		        public int compare(Meal s1, Meal s2) {
-		            return Integer.valueOf(s1.getDay()).compareTo(Integer.valueOf(s2.getDay()));
-		        }
-		    });
-			
-			this.meals = meals;
 		}
-		
 		return this.meals;
 	}
-	
-	
+
+
 	/**
 	 * @return Menue table as html code
 	 */
 	public String getMenueAsHtml(){
 		String html = "";
-		
+
 		// add css files
 		html += Settings.getCssLink("allgemein.css");
 		html += Settings.getInlineCss();
-		
+
 		if( menueURL.trim() != "" ){			
-			
+
 			try {
-				
+
 				// get menue from url
 				Document doc = Jsoup.connect( menueURL ).get();
-				
+
 				// remove links to remote sites
 				// and unwrap all other links
 				doc.select("a[target=_blank]").remove();
 				doc.select("a").unwrap();
 				Elements tables = doc.select("table");
-				
+
 				// add tables html
 				for( Element e : tables ){					
 					html += e.outerHtml().replace( "src=\"..",
 							"src=\""+Settings.sh_mensa_url );					
 				}				
-				
+
 			} catch (IOException e) {}			
 		}
 		else {
@@ -333,11 +223,11 @@ public class Mensa {
 			}
 			html += "</ul>";
 		}
-		
+
 		return html;
 	}
-	
-	
+
+
 	/**
 	 * @param meal
 	 * @return rating of meal for this mensa
@@ -345,7 +235,7 @@ public class Mensa {
 	 */
 	public int getRating(Meal meal){		
 		try {
-			
+
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
 			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
@@ -356,12 +246,12 @@ public class Mensa {
 			url += "&vege=" + bToI( meal.isVegetarian() );
 			url += "&vega=" + bToI( meal.isVegan() );
 			url += "&alc=" + bToI ( meal.isAlc() );
-					
+
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
 			String ret = IOUtils.toString( in );
 			IOUtils.closeQuietly(in);			
-			
+
 			// get rating from response
 			if( ret.contains( DatabaseResponses.OK.value ) ){
 				String[] data = ret.split( "\\"+DatabaseResponses.SEPERATOR.value );
@@ -371,7 +261,7 @@ public class Mensa {
 					} catch(Exception e) {}
 				}
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
@@ -379,10 +269,10 @@ public class Mensa {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return -1;
 	}
-	
+
 	/**
 	 * Adds rating for meal of this mensa to database
 	 * @param meal
@@ -391,7 +281,7 @@ public class Mensa {
 	 */
 	public boolean addRating(Meal meal, int aRating, String comment, String hash){
 		try {
-			
+
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
 			url += "f=addRating&loc=" + URLEncoder.encode( city, "UTF-8" );
@@ -405,12 +295,12 @@ public class Mensa {
 			url += "&rating=" + Integer.toString( aRating );
 			url += "&com=" + URLEncoder.encode( comment, "UTF-8" );
 			url += "&hash=" + URLEncoder.encode( hash, "UTF-8" );
-					
+
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
 			String ret = IOUtils.toString( in );
 			IOUtils.closeQuietly(in);			
-			
+
 			// get rating from response
 			if( ret.contains( DatabaseResponses.OK.value ) ){
 				return true;
@@ -418,7 +308,7 @@ public class Mensa {
 			else{
 				System.out.println("ERROR: " + url);
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
@@ -426,19 +316,19 @@ public class Mensa {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * @param meal
 	 * @return List of comments of a meal
 	 */
 	public List<String> getComments(Meal meal){
 		List<String> comments = new ArrayList<String>();
-		
+
 		try {
-			
+
 			// generate request 
 			String url = Settings.sh_mensa_meal_db_api_url + "?";
 			url += "f=getRating&loc=" + URLEncoder.encode( city, "UTF-8" );
@@ -449,12 +339,12 @@ public class Mensa {
 			url += "&vege=" + bToI( meal.isVegetarian() );
 			url += "&vega=" + bToI( meal.isVegan() );
 			url += "&alc=" + bToI ( meal.isAlc() );
-					
+
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
 			String ret = IOUtils.toString( in );
 			IOUtils.closeQuietly(in);			
-			
+
 			// get rating from response
 			if( ret.contains( DatabaseResponses.OK.value ) ){
 				String[] data = ret.split( DatabaseResponses.SEPERATOR.value );
@@ -466,7 +356,7 @@ public class Mensa {
 					}
 				}
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
@@ -474,10 +364,10 @@ public class Mensa {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return comments;
 	}
-	
+
 	/**
 	 * @param string
 	 * @return md5 hash of string
@@ -485,41 +375,41 @@ public class Mensa {
 	public static String md5(String string){
 		MessageDigest md5;
 		try {
-			
+
 			md5 = MessageDigest.getInstance("MD5");
 			md5.reset();
-	        md5.update(string.getBytes());
-	        byte[] result = md5.digest();
+			md5.update(string.getBytes());
+			byte[] result = md5.digest();
 
-	        /* Ausgabe */
-	        StringBuffer hexString = new StringBuffer();
-	        for (int i=0; i<result.length; i++) {
-	            hexString.append(Integer.toHexString(0xFF & result[i]));
-	        }
-	        
-	        return hexString.toString();
+			/* Ausgabe */
+			StringBuffer hexString = new StringBuffer();
+			for (int i=0; i<result.length; i++) {
+				hexString.append(Integer.toHexString(0xFF & result[i]));
+			}
+
+			return hexString.toString();
 		} catch (NoSuchAlgorithmException 
 				e) {
 			e.printStackTrace();
 		}
-		
+
 		return "";        
 	}
-	
-	
+
+
 	/**
 	 * Prints mensa data
 	 */
 	public String toString(){
 		String rString = "Mensa: "+name+" ("+city+")\n";
 		rString += "lunch time: "+lunchTime+"\nOffers:\n";
-		
+
 		for( String o : offers ){
 			rString += "\t- "+o+"\n";
 		}
-		
+
 		rString += "menue url: "+menueURL;
-		
+
 		return rString;
 	}
 
@@ -599,14 +489,14 @@ public class Mensa {
 	public void setMeals(List<Meal> meals) {
 		this.meals = meals;
 	}
-	
-	
+
+
 	/**
 	 * @param b
 	 * @return integer 1 for true and 0 for false of boolean b
 	 */
 	public static int bToI(boolean b) {
-	    return b ? 1 : 0;
+		return b ? 1 : 0;
 	}
-	
+
 }

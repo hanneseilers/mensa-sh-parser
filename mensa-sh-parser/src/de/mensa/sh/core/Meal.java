@@ -1,5 +1,9 @@
 package de.mensa.sh.core;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
@@ -14,8 +18,7 @@ public class Meal {
 	private boolean vegan = false;
 	private boolean alc = false;
 	private String price = "";
-	private String date = "";
-	private int day = 0;
+	private Date date = null;
 	
 	/**
 	 * Constructor
@@ -32,23 +35,10 @@ public class Meal {
 		mealName = name;
 	}
 	
-	public Meal(Element mealHtmlElement, Element priceHtmlElement, int setDay){
-		this(mealHtmlElement.text());
-		day = setDay;
-		setParameter(mealHtmlElement, priceHtmlElement);
-	}
-	
-	public Meal(Element mealHtmlElement, Element priceHtmlElement, String setDate, int setDay){
-		this(mealHtmlElement.text());
-		day = setDay;
-		date = setDate;
-		setParameter(mealHtmlElement, priceHtmlElement);
-	}
-	
-	public Meal(Element mealHtmlElement, int setDay){
-		this(mealHtmlElement.text());
-		day = setDay;
-		setParameter(mealHtmlElement, null);
+	public Meal(Element mealTr, String setDate) throws ParseException{
+		this();
+		date = new SimpleDateFormat("dd.MM.yyyy").parse(setDate);
+		setParameter(mealTr);
 	}
 	
 	/**
@@ -60,7 +50,7 @@ public class Meal {
 	 * @param vegan
 	 * @param alc
 	 */
-	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, int day){
+	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, Date date){
 		mealName = name;
 		this.pig = pig;
 		this.cow = cow;
@@ -68,15 +58,17 @@ public class Meal {
 		this.vegan = vegan;
 		this.alc = alc;
 		this.price = price;
-		this.day = day;
+		this.date = date;
 	}
 	
 	/**
 	 * Sets parameters from html element
 	 * @param htmlText
 	 */
-	private void setParameter(Element htmlElement, Element priceElement){
-		Elements imgElements = htmlElement.select("img");
+	private void setParameter(Element tr){
+		mealName = tr.select("td strong").first().text();
+		
+		Elements imgElements = tr.select(".properties img");
 		String url = Settings.sh_mensa_meal_img_url;
 		String sPig = url + Settings.sh_mensa_meal_img_pig;
 		String sCow = url + Settings.sh_mensa_meal_img_cow;
@@ -97,11 +89,8 @@ public class Meal {
 			else if( src.contains(sAlc) )
 				alc = true;
 		}
-		
-		if (priceElement != null){		
-			price = priceElement.text();
-		}
-		
+			
+		price = tr.select("td").last().text();		
 		
 	}
 	
@@ -204,14 +193,23 @@ public class Meal {
 	 * @return the day
 	 */
 	public int getDay() {
-		return day;
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		return cal.get(Calendar.DAY_OF_WEEK);
 	}
 	
 	/**
 	 * @return the date
 	 */
-	public String getDate() {
+	public Date getDate() {
 		return date;
+	}
+	
+	/**
+	 * @return the date
+	 */
+	public String getDateString() {
+		return new SimpleDateFormat("dd.MM.yyyy").format(date);
 	}
 	
 	/**

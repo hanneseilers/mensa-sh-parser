@@ -7,17 +7,17 @@ package de.mensa.sh.core;
  */
 public class Settings {
 
-	public static String sh_mensa_url = "http://studentenwerk-s-h.de";
-	public static String sh_mensa_overview = "http://studentenwerk-s-h.de/seiten_essen/essen_plaene.html";	
+	public static String sh_mensa_url = "http://studentenwerk-sh.eu/";
+	public static String sh_mensa_overview = "http://studentenwerk-sh.eu/essen/standorte/index.html";	
 	public static String sh_mensa_css = "http://studentenwerk-s-h.de/css_stile/";
 	public static String sh_mensa_meal_db_api_url = "http://192.168.0.106/mensash/api.php";
 	
-	public static String sh_mensa_meal_img_url = "http://studentenwerk-s-h.de/bilder/bilder_essen/";
-	public static String sh_mensa_meal_img_pig = "logo_schwein.png";
-	public static String sh_mensa_meal_img_cow = "logo_rind.png";
-	public static String sh_mensa_meal_img_vegetarian = "logo_vegetarisch.png";
-	public static String sh_mensa_meal_img_vegan = "logo_vegan.png";
-	public static String sh_mensa_meal_img_alc = "logo_alkohol.png";
+	public static String sh_mensa_meal_img_url = "http://studentenwerk-sh.eu/cms/css/img/menu/";
+	public static String sh_mensa_meal_img_pig = "iconProp_s.hd.png";
+	public static String sh_mensa_meal_img_cow = "iconProp_r.hd.png";
+	public static String sh_mensa_meal_img_vegetarian = "iconProp_vegetarisch.hd.png";
+	public static String sh_mensa_meal_img_vegan = "iconProp_vegan.hd.png";
+	public static String sh_mensa_meal_img_alc = "iconProp_a.hd.png";
 	
 	/**
 	 * @param cssFile
