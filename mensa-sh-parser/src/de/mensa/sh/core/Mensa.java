@@ -121,13 +121,14 @@ public class Mensa {
 					Elements mensaElements = doc.select(".menuMensaSelect.city_" + e.attr("value") + " option[value]");
 					for(Element element:mensaElements) {
 						// get name
+						element.html( element.html().replace("&nbsp;", " ") );
 						String mensaName = element.text();
 						String url = Settings.sh_mensa_url + element.attr("value").substring(1);
 
 						Document doc2 = Jsoup.connect(url).get();
 
 						// get lunch time
-						Element elementLunchTime = doc2.select( ".htmlcontent:contains(Öffnungszeiten)" ).first();
+						Element elementLunchTime = doc2.select( ".htmlcontent:contains(ffnungszeiten)" ).first();
 						String mensaLunchTime = "";
 						if( elementLunchTime != null )
 							mensaLunchTime = elementLunchTime.text();
@@ -372,10 +373,11 @@ public class Mensa {
 			// generate request 
 			String url = Settings.sh_mensa_db_api_url + "?";
 			url += "f=addRating" + URLBuilder.buildURLParameter(this, meal, rating, comment, hash);
+			
 			// read response from online database
 			InputStream in = new URL( url ).openStream();
 			String ret = IOUtils.toString( in );
-			IOUtils.closeQuietly(in);			
+			IOUtils.closeQuietly(in);
 
 			// get rating from response
 			if( ret.contains( DatabaseResponses.OK.value ) ){

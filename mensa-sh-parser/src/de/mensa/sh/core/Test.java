@@ -40,7 +40,7 @@ public class Test {
 						Integer rating = mensa.getRating(meal);
 						
 						// add rating if not rated jet
-						if( rating < 0 ){
+						if( rating < 100 ){
 							mensa.addRating(meal, (int) Math.round(Math.random() * 5), "", "test");
 						}
 					}

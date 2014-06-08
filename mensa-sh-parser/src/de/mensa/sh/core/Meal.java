@@ -85,12 +85,11 @@ public class Meal {
 		mealName = tr.select("td strong").first().text();
 		
 		Elements imgElements = tr.select(".properties img");
-		String url = Settings.sh_mensa_meal_img_url;
-		String sPig = url + Settings.sh_mensa_meal_img_pig;
-		String sCow = url + Settings.sh_mensa_meal_img_cow;
-		String sVegetarian = url + Settings.sh_mensa_meal_img_vegetarian;
-		String sVegan = url + Settings.sh_mensa_meal_img_vegan;
-		String sAlc = url + Settings.sh_mensa_meal_img_alc;
+		String sPig = Settings.sh_mensa_meal_img_pig;
+		String sCow = Settings.sh_mensa_meal_img_cow;
+		String sVegetarian = Settings.sh_mensa_meal_img_vegetarian;
+		String sVegan = Settings.sh_mensa_meal_img_vegan;
+		String sAlc = Settings.sh_mensa_meal_img_alc;
 		
 		for( Element img: imgElements ){
 			String src = img.attr("src");
