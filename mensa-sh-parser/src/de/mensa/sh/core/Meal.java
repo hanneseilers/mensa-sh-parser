@@ -1,10 +1,6 @@
 package de.mensa.sh.core;
 
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
@@ -19,15 +15,14 @@ public class Meal {
 	private boolean vegan = false;
 	private boolean alc = false;
 	private String price = "";
-	private Date date = null;
 	private int rating = 0;
+	private int day = -1;
 	public final static int serialElements = 8;
 	
 	/**
 	 * Constructor
 	 */
-	public Meal() {
-	}
+	public Meal() {}
 	
 	/**
 	 * Constructor
@@ -38,10 +33,15 @@ public class Meal {
 		mealName = name;
 	}
 	
-	public Meal(Element mealTr, String setDate) throws ParseException {
+	/**
+	 * Constructor
+	 * @param aMealElement	{@link Element} of meal.
+	 * @param aMealDay		{@link Integer} of meals day number.
+	 */
+	public Meal(Element aMealElement, int aMealDay) {
 		this();
-		date = new SimpleDateFormat("dd.MM.yyyy").parse(setDate);
-		setParameter(mealTr);
+		setParameter(aMealElement);
+		setDay(aMealDay);
 	}
 	
 	/**
@@ -53,15 +53,14 @@ public class Meal {
 	 * @param vegan
 	 * @param alc
 	 */
-	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, Date date){
-		mealName = name;
-		this.pig = pig;
-		this.cow = cow;
-		this.vegetarian = vegetarian;
-		this.vegan = vegan;
-		this.alc = alc;
-		this.price = price;
-		this.date = date;
+	public Meal(String name, boolean pig, boolean cow, boolean vegetarian, boolean vegan, boolean alc, String price, int day){
+		setMealName(name);
+		setPig(pig);
+		setCow(cow);
+		setVegetarian(vegetarian);
+		setVegan(vegan);
+		setPrice(price);
+		setDay(day);
 	}
 	
 	/**
@@ -78,13 +77,13 @@ public class Meal {
 	}
 	
 	/**
-	 * Sets parameters from html element
-	 * @param htmlText
+	 * Sets parameters from meals html {@link Element}.
+	 * @param aMealElement	{@link Element} of meal.
 	 */
-	private void setParameter(Element tr){
-		mealName = tr.select("td strong").first().text();
+	private void setParameter(Element aMealElement){
+		setMealName( aMealElement.select("td strong").first().text() );
 		
-		Elements imgElements = tr.select(".properties img");
+		Elements imgElements = aMealElement.select(".properties img");		
 		String sPig = Settings.sh_mensa_meal_img_pig;
 		String sCow = Settings.sh_mensa_meal_img_cow;
 		String sVegetarian = Settings.sh_mensa_meal_img_vegetarian;
@@ -94,18 +93,18 @@ public class Meal {
 		for( Element img: imgElements ){
 			String src = img.attr("src");
 			if( src.contains(sPig) )
-				pig = true;
+				setPig(true);
 			else if( src.contains(sCow) )
-				cow = true;
+				setCow(true);
 			else if( src.contains(sVegetarian) )
-				vegetarian = true;
+				setVegetarian(true);
 			else if( src.contains(sVegan) )
-				vegan = true;
+				setVegan(true);
 			else if( src.contains(sAlc) )
-				alc = true;
+				setAlc(true);
 		}
 			
-		price = tr.select("td").last().text();		
+		setPrice( aMealElement.select("td").last().text() );		
 		
 	}
 	
@@ -205,19 +204,17 @@ public class Meal {
 	}
 	
 	/**
-	 * @return the day
+	 * @param day the day to set
 	 */
-	public int getDay() {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		return cal.get(Calendar.DAY_OF_WEEK) - 2;
+	public void setDay(int day){
+		this.day = day;
 	}
 	
 	/**
-	 * @return the date
+	 * @return the day
 	 */
-	public String getDate() {
-		return new SimpleDateFormat("dd.MM.yyyy").format(date);
+	public int getDay() {
+		return day;
 	}
 	
 	/**
@@ -225,6 +222,13 @@ public class Meal {
 	 */
 	public String getPrice() {
 		return price;
+	}
+	
+	/**
+	 * @param price	the price to set
+	 */
+	public void setPrice(String price){
+		this.price = price;
 	}
 	
 	/**
@@ -255,6 +259,7 @@ public class Meal {
 			serializedObject += Mensa.serialSeperator + meal.isPig();
 			serializedObject += Mensa.serialSeperator + meal.isVegan();
 			serializedObject += Mensa.serialSeperator + meal.isVegetarian();
+			serializedObject += Mensa.serialSeperator + meal.getDay();
 
 			return URLBuilder.encode(serializedObject);
 
@@ -293,7 +298,7 @@ public class Meal {
 							Boolean.parseBoolean( objectArray[offset+6] ),
 							Boolean.parseBoolean( objectArray[offset+3] ),
 							objectArray[offset+2],
-							null);
+							Integer.parseInt( objectArray[offset+8] ) );
 				return meal;
 			}
 

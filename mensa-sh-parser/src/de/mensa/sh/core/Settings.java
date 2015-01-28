@@ -11,8 +11,13 @@ import java.io.InputStreamReader;
  */
 public class Settings {
 
-	public static String sh_mensa_url = "http://studentenwerk-sh.eu/";
-	public static String sh_mensa_overview = "http://studentenwerk-sh.eu/de/essen/standorte/index.html";	
+	public static String sh_mensa_url = "http://www.studentenwerk.sh";
+	public static String sh_mensa_overview = "/de/essen/standorte/index.html";
+	public static String sh_mensa_url_base = "/de/essen/standorte/";
+	public static String sh_mensa_url_ending = "index.html";
+	public static String sh_mensa_lunch_time_search_string = "ffnungszeiten";
+	public static String sh_mensa_meal_url_ending = "speiseplan.html";
+	public static String sh_mensa_meal_day_prefix = "day_";
 	public static String sh_mensa_css = "http://studentenwerk-s-h.de/css_stile/";
 	public static String sh_mensa_db_api_url = "http://localhost/mensa-sh-rating/website/api.php";
 	public static String sh_mensa_rating_ico_full_url = "http://localhost/mensa-sh-rating/website/img/star.png";

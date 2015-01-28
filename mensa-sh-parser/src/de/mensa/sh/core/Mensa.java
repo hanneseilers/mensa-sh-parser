@@ -7,15 +7,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,11 +26,10 @@ public class Mensa {
 
 	private String city = "";
 	private String name = "";
-	private String lunchTime = "";
-	private List<String> offers = new ArrayList<String>();
+	private String lunchTime = null;
+	private String mensaURL = "";
 	private String menueURL = "";
 	private List<Meal> meals = null;
-	private String html = null;
 	private Hashtable<String, Integer> ratings = new Hashtable<String, Integer>(); 
 	
 	public final static String skipClassNames = "mitteilung";
@@ -48,21 +41,6 @@ public class Mensa {
 	 * Constructor
 	 */
 	public Mensa(){	}
-
-	/**
-	 * Constructor
-	 * @param aName
-	 * @param aLunchTime
-	 * @param aOffers
-	 * @param aMenueURL
-	 */
-	public Mensa(String aCity, String aName, String aLunchTime, List<String> aOffers, String aMenueURL){
-		setCity(aCity);
-		setName(aName);
-		setLunchTime(aLunchTime);
-		setOffers(aOffers);
-		setMenueURL(aMenueURL);
-	}
 	
 	/**
 	 * Constructor
@@ -71,10 +49,10 @@ public class Mensa {
 	 * @param aLunchTime
 	 * @param aMenueURL
 	 */
-	public Mensa(String aCity, String aName, String aLunchTime, String aMenueURL){
+	public Mensa(String aCity, String aName, String aMensaURL, String aMenueURL){
 		setCity(aCity);
 		setName(aName);
-		setLunchTime(aLunchTime);
+		setMensaURL(aMensaURL);
 		setMenueURL(aMenueURL);
 	}
 
@@ -86,7 +64,7 @@ public class Mensa {
 
 		try {
 
-			Document doc = Jsoup.connect( Settings.sh_mensa_overview ).get();
+			Document doc = Jsoup.connect( Settings.sh_mensa_url + Settings.sh_mensa_overview ).get();
 			Elements htmlElements = doc.select( "#menuCitySelect option:not([value=0])" );
 
 			// get locations			
@@ -102,57 +80,35 @@ public class Mensa {
 	}
 
 	/**
-	 * Gets all locations of a city 
-	 * @param aCity
-	 * @return
+	 * Gets all locations.
+	 * @return {@link List} of {@link Mensa} locations.
 	 */
-	public static List<Mensa> getLocations(String aCity){
+	public static List<Mensa> getLocations(){
 		List<Mensa> locations = new ArrayList<Mensa>();
 
-		try {
-
-			Document doc = Jsoup.connect( Settings.sh_mensa_overview ).get();
-			Elements htmlElements = doc.select( "#menuCitySelect option:not([value=0])" );
-
-			// find city and locations
-			for( Element e : htmlElements ){				
-				// check if city was found
-				if( e.text().contains( aCity ) ){
-					Elements mensaElements = doc.select(".menuMensaSelect.city_" + e.attr("value") + " option[value]");
-					for(Element element:mensaElements) {
-						// get name
-						element.html( element.html().replace("&nbsp;", " ") );
-						String mensaName = element.text();
-						String url = Settings.sh_mensa_url + element.attr("value").substring(1);
-
-						Document doc2 = Jsoup.connect(url).get();
-
-						// get lunch time
-						Element elementLunchTime = doc2.select( ".htmlcontent:contains(ffnungszeiten)" ).first();
-						String mensaLunchTime = "";
-						if( elementLunchTime != null )
-							mensaLunchTime = elementLunchTime.text();
-
-						// get offers
-						List<String> mensaOffers = new ArrayList<String>();
-						String mensaMenueUrl = url.replace("index.html", "speiseplan.html");
-
-						// add new mensa to list
-						locations.add( new Mensa(
-								aCity,
-								mensaName,
-								mensaLunchTime,
-								mensaOffers,
-								mensaMenueUrl) );
-					}
-					break;
-				}
-
-
-
+		// get document and elements
+		Document doc = Cache.getDocument( Settings.sh_mensa_url + Settings.sh_mensa_overview );
+		if( doc != null ){
+			Elements htmlElements = doc.select( ".menuMensaSelect option[value]" );
+				
+			for( Element e : htmlElements ){
+				
+				// extract features
+				String mensaCity = e.attr("value").replace(Settings.sh_mensa_url_base, "").split("/")[0];
+				mensaCity = Character.toUpperCase( mensaCity.charAt(0) ) + mensaCity.substring(1);
+				
+				String mensaUrl = Settings.sh_mensa_url	+ e.attr("value");
+				String mensaMenueUrl = mensaUrl.replace(Settings.sh_mensa_url_ending, Settings.sh_mensa_meal_url_ending);
+				String mensaName = e.text();
+				
+				// add new mensa
+				locations.add( new Mensa(
+						mensaCity,
+						mensaName,
+						mensaUrl,
+						mensaMenueUrl) );
 			}
-
-		} catch (IOException e) {}
+		}
 
 		return locations;
 	}
@@ -175,93 +131,41 @@ public class Mensa {
 	 * @return List of meals of this mensa
 	 */
 	public List<Meal> getMeals(){
-		if(this.meals == null){
-			List<Meal> meals = new ArrayList<Meal>();
-			try {
-				Document doc = Jsoup.connect( getMenueURL() ).get();
-				Element menu = doc.select(".menu").first();
-				if(menu != null) {
-					//for(Element week:menu.select("#days")) { We could get the next week using this, but the app needs to be changed for that
-					Element week = menu.select("#days").first();
-						for(Element day:week.select(".day")) {
-							String date = day.select("table tr th").first().text();
-							Pattern pattern = Pattern.compile("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d");
-							Matcher matcher = pattern.matcher(date);
-							if(matcher.find()) {
-								date = matcher.group();
-							}
-							Elements trElements = day.select( "tr.even, tr.odd" );
-							for( Element tr : trElements ){	
-								Meal meal = new Meal(tr, date);
-								meals.add(meal);
-							}
-						}
-					//}
-				}
-
-				Collections.sort(meals, new Comparator<Meal>() {
-					@Override
-					public int compare(Meal s1, Meal s2) {
-						return s1.getDate().compareTo(s2.getDate());
-					}
-				});
-
-				this.meals = meals;
-			} catch (IOException e1) {
-			} catch (ParseException e) {
-			}
-		}
-		return this.meals;
-	}
-
-
-	/**
-	 * @return Menue table as html code
-	 */
-	public String getMenueAsHtml(){
-		if(html == null){
+		if(meals == null){
 			
-			html = "";
+			List<Meal> vMeals = new ArrayList<Meal>();
+			Document doc = Cache.getDocument(  getMenueURL() );
 			
-			// add css files
-			html += Settings.getCssLink("allgemein.css");
-			html += Settings.getInlineCss();
-			
-			if( menueURL.trim() != "" ){			
+			if( doc != null ){
+				Elements menus = doc.select("#days");
 				
-				try {
-					
-					// get menue from url
-					Document doc = Jsoup.connect( menueURL ).get();
-					
-					// remove links to remote sites
-					// and unwrap all other links
-					doc.select("a[target=_blank]").remove();
-					doc.select("a").unwrap();
-					Elements tables = doc.select("table");
-					
-					// add tables html
-					for( Element e : tables ){					
-						html += e.outerHtml().replace( "src=\"..",
-								"src=\""+Settings.sh_mensa_url );					
-					}				
-					
-				} catch (IOException e) {}			
-			}
-			else {
-				// add mensa information
-				html += "<b>"+name+"</b><br />";
-				html += "Mittagessen: "+lunchTime+"<br />";
-				html += "Angebot:<br /><ul>";
-				for( String o : offers ){
-					html += "<li>"+o+"</li>";
+				// go thorugh all weeks and all days
+				for( Element vWeek : menus ){		
+					for( Element vDay : vWeek.select(".day") ){
+						
+						for( Element vMeal : vDay.select(".odd") ){						
+							try{								
+								int vMealDay = Integer.parseInt( vDay.attr("id").replace(Settings.sh_mensa_meal_day_prefix, "") );
+								vMeals.add( new Meal(vMeal, vMealDay) );								
+							} catch(NumberFormatException e){}
+						}
+						
+						for( Element vMeal : vDay.select(".even") ){						
+							try{								
+								int vMealDay = Integer.parseInt( vDay.attr("id").replace(Settings.sh_mensa_meal_day_prefix, "") );
+								vMeals.add( new Meal(vMeal, vMealDay) );								
+							} catch(NumberFormatException e){}
+						}
+						
+					}
 				}
-				html += "</ul>";
+				
+				meals = vMeals;
 			}
 			
 		}
-
-		return html;
+		
+		return meals;
 	}
 	
 	/**
@@ -439,12 +343,8 @@ public class Mensa {
 	 * Prints mensa data
 	 */
 	public String toString(){
-		String rString = "Mensa: "+name+" ("+city+")\n";
-		rString += "lunch time: "+lunchTime+"\nOffers:\n";
-
-		for( String o : offers ){
-			rString += "\t- "+o+"\n";
-		}
+		String rString = "Mensa: "+ getName() +" ("+ getCity() +")\n";
+		rString += "lunch time: "+ getLunchTime() +"\n";
 
 		rString += "menue url: "+menueURL;
 
@@ -469,14 +369,24 @@ public class Mensa {
 	 * @return the lunchTime
 	 */
 	public String getLunchTime() {
+		if( lunchTime == null ){				
+			Document doc = Cache.getDocument( getMensaURL() );
+			
+			if( doc != null ){
+				Element vElement = doc.select( ".htmlcontent:contains("
+						+ Settings.sh_mensa_lunch_time_search_string + ")" ).last();
+				lunchTime = vElement.text();
+			}
+		}
+		
 		return lunchTime;
 	}
-
+	
 	/**
-	 * @return the offers
+	 * @return	the mensaURL
 	 */
-	public List<String> getOffers() {
-		return offers;
+	public String getMensaURL(){
+		return mensaURL;
 	}
 
 	/**
@@ -506,12 +416,12 @@ public class Mensa {
 	public void setLunchTime(String lunchTime) {
 		this.lunchTime = lunchTime;
 	}
-
+	
 	/**
-	 * @param offers the offers to set
+	 * @param mensaURL	the mensaURL to set
 	 */
-	public void setOffers(List<String> offers) {
-		this.offers = offers;
+	public void setMensaURL(String mensaURL){
+		this.mensaURL = mensaURL;
 	}
 
 	/**
@@ -527,46 +437,5 @@ public class Mensa {
 	public void setMeals(List<Meal> meals) {
 		this.meals = meals;
 	}
-
-	/**
-	 * @return String of serialized object
-	 */
-
-	public static String serialize(Mensa mensa){
-		String serializedObject;
-		try {
-			
-			serializedObject = URLBuilder.convertStringMutations(mensa.getCity());
-			serializedObject += serialSeperator + URLBuilder.convertStringMutations(mensa.getLunchTime());
-			serializedObject += serialSeperator + mensa.getMenueURL();
-			serializedObject += serialSeperator + URLBuilder.convertStringMutations(mensa.getName());
-			
-			return URLBuilder.encode(serializedObject);
-			
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		
-		return "";
-	}
 	
-	/**
-	 * @param serializedObject
-	 * @return Mensa from serialzed object string
-	 */
-	public static Mensa unserialize(String serializedObject){
-		try {
-			
-			serializedObject = URLBuilder.decode(serializedObject);		
-			String[] objectArray = serializedObject.split( serialSeperator );
-			if( objectArray.length >= serialElements  ){
-				return new Mensa( objectArray[0], objectArray[3], objectArray[1], objectArray[2] );
-			}
-			
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
 }
