@@ -14,27 +14,21 @@ import java.io.OutputStreamWriter;
  * @author Hannes Eilers
  *
  */
-public class FileWriter{
+public class DefaultFileWriter implements FileWriterInterface{
 
 	private File mFile = null;
 	
 	/**
 	 * Constructor
 	 */
-	public FileWriter(){}
+	public DefaultFileWriter(){}
 	
-	/**
-	 * Sets file.
-	 * @param aFile	{@link String} of filename and path.
-	 */
+	@Override
 	public void setFile(String aFile){
 		mFile = new File(aFile);
 	}
 	
-	/**
-	 * @return	{@link String} of file content
-	 * 			or {@code null} if file is not readable.
-	 */
+	@Override
 	public String readFromFile(){
 		if( exsist() && isFile() && canRead() ){
 			try {
@@ -59,11 +53,7 @@ public class FileWriter{
 		return null;
 	}
 	
-	/**
-	 * Writes {@link String} to new file.
-	 * @param aText	{@link String} to write.
-	 * @return		{@code true} if successful, {@code false} otherwise.
-	 */
+	@Override
 	public boolean writeToFile(String aText){
 		try {
 			
@@ -84,7 +74,7 @@ public class FileWriter{
 		return false;
 	}
 	
-	
+	@Override
 	public long lastModified(){
 		if( mFile != null ){
 			return mFile.lastModified();
@@ -93,6 +83,7 @@ public class FileWriter{
 		return 0L;
 	}
 	
+	@Override
 	public boolean delete(){
 		if( mFile != null ){
 			return mFile.delete();
@@ -101,26 +92,32 @@ public class FileWriter{
 		return false;
 	}
 	
+	@Override
 	public boolean exsist(){
 		return mFile != null && mFile.exists();
 	}
 	
+	@Override
 	public boolean isFile(){
 		return mFile != null && mFile.isFile();
 	}
 	
+	@Override
 	public boolean canWrite(){
 		return mFile != null && mFile.canWrite();
 	}
 	
+	@Override
 	public boolean canRead(){
 		return mFile != null && mFile.canRead();
 	}
 	
+	@Override
 	public String getPath(){
 		return mFile != null ? mFile.getPath() : "";
 	}
 	
+	@Override
 	public String getName(){
 		return mFile != null ? mFile.getName() : "";
 	}

@@ -14,15 +14,15 @@ import org.jsoup.nodes.Document;
  */
 public class Cache {
 	
-	protected static Class<FileWriter> sFileWriterClass = FileWriter.class; 
+	protected static FileWriterInterface sFileWriterClass = new DefaultFileWriter(); 
 	protected static long sTimeout = 86400000L;
 	
 	/**
-	 * Sets class of {@link FileWriter} to use for file access.
-	 * @param aClass	{@link Class} of {@link FileWriter}.
+	 * Sets class of {@link DefaultFileWriter} to use for file access.
+	 * @param aFileWriter	{@link Class} of {@link DefaultFileWriter}.
 	 */
-	public static void setFileWriterClass(Class<FileWriter> aClass){
-		sFileWriterClass = aClass;
+	public static void setFileWriterClass(FileWriterInterface aFileWriter){
+		sFileWriterClass = aFileWriter;
 	}
 	
 	/**
@@ -53,7 +53,7 @@ public class Cache {
 			}
 			
 			// get file
-			FileWriter vFile = sFileWriterClass.newInstance();
+			FileWriterInterface vFile = sFileWriterClass.getClass().newInstance();
 			vFile.setFile(vHash);
 			
 			// check if file exists and is newer than timeout
