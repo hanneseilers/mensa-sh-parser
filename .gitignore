@@ -1,10 +1,15 @@
 *.class
 
 # Package Files #
+*.jar
 *.war
 *.ear
+
+# Android APK #
 *.apk
 
-# HTML files #
-*.htm
-*.html
+# bin folder #
+/bin
+
+# allow libs folder #
+!/libs
