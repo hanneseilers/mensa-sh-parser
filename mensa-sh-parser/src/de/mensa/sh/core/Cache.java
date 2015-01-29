@@ -1,7 +1,6 @@
 package de.mensa.sh.core;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
