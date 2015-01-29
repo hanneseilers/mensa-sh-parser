@@ -10,7 +10,7 @@ Include the pre-build .jar file from latest release into your project.
 For usage in enviroments (like Android) where using java File objects isn't recommended;
 extend the FileWriter class and overwrite it's functions.
 FileWriter class is used as an interface between the librarys internal cache management and the file system access.
-Set the class of your extended FileWriter class using Cache classes static function.
+Set an instance of your extended FileWriter class using Cache classes static function.
 
 Usage
 -----
