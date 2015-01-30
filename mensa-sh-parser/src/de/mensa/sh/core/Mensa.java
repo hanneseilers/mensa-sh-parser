@@ -27,6 +27,7 @@ public class Mensa {
 	private String city = "";
 	private String name = "";
 	private String lunchTime = null;
+	private String lunchTimeHtml = null;
 	private String mensaURL = "";
 	private String menueURL = "";
 	private List<Meal> meals = null;
@@ -364,21 +365,38 @@ public class Mensa {
 	public String getName() {
 		return name;
 	}
-
+	
 	/**
 	 * @return the lunchTime
 	 */
-	public String getLunchTime() {
+	public String getLunchTime(){
+		return getLunchTime(false);
+	}
+
+	/**
+	 * Gets lunch time.
+	 * @param	Set {@code true} to get lunch time as html code
+	 * @return 	the lunchTime
+	 */
+	public String getLunchTime(boolean aHtml) {
 		if( lunchTime == null ){				
 			Document doc = Cache.getDocument( getMensaURL() );
 			
 			if( doc != null ){
 				Element vElement = doc.select( ".htmlcontent:contains("
 						+ Settings.sh_mensa_lunch_time_search_string + ")" ).last();
-				lunchTime = vElement.text();
+				
+				if( aHtml ){
+					lunchTimeHtml = vElement.html();
+				} else {
+					lunchTime = vElement.text();
+				}
 			}
 		}
 		
+		if( aHtml ){
+			return lunchTimeHtml;
+		}
 		return lunchTime;
 	}
 	

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -15,6 +16,7 @@ import org.jsoup.nodes.Document;
 public class Cache {
 	
 	protected static FileWriterInterface sFileWriterClass = new DefaultFileWriter(); 
+	protected static int sNetworkTimeout = 10000;
 	protected static long sTimeout = 86400000L;
 	
 	/**
@@ -31,6 +33,14 @@ public class Cache {
 	 */
 	public static void setTimeout(long aTimeout){
 		sTimeout = aTimeout;
+	}
+	
+	/**
+	 * Sets timeout for network connections.
+	 * @param aTimeout	{@link Integer} timeout in ms.
+	 */
+	public static void setNetworkTimeout(int aTimeout){
+		sNetworkTimeout = aTimeout;
 	}
 
 	/**
@@ -68,7 +78,9 @@ public class Cache {
 				
 			}
 			
-			Document vDocument = Jsoup.connect(aURL).get();
+			Connection vConnection = Jsoup.connect(aURL);
+			vConnection.timeout(sNetworkTimeout);
+			Document vDocument = vConnection.get();
 			vFile.writeToFile( vDocument.html() );
 			return vDocument;
 			
