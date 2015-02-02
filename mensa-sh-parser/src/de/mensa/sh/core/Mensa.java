@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -89,6 +90,7 @@ public class Mensa {
 
 		// get document and elements
 		Document doc = Cache.getDocument( Settings.sh_mensa_url + Settings.sh_mensa_overview );
+		
 		if( doc != null ){
 			Elements htmlElements = doc.select( ".menuMensaSelect option[value]" );
 				

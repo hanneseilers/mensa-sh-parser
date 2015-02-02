@@ -43,9 +43,9 @@ public final class URLBuilder {
 	 * @throws UnsupportedEncodingException
 	 */
 	public static String buildURLParameter(Mensa mensa, Meal meal) throws UnsupportedEncodingException{
-		String url = "&loc=" + encode( convertStringMutations(mensa.getCity()) );
-		url += "&mensa=" + encode( convertStringMutations(mensa.getName()) );
-		url += "&meal=" + encode( convertStringMutations(meal.getMealName()) );
+		String url = "&loc=" + encode( convertStringMutations(mensa.getCity()) ).replace("%C2%A0", "+");
+		url += "&mensa=" + encode( convertStringMutations(mensa.getName()) ).replace("%C2%A0", "+");
+		url += "&meal=" + encode( convertStringMutations(meal.getMealName()) ).replace("%C2%A0", "+");
 		url += "&pig=" + bToI( meal.isPig() );
 		url += "&cow=" + bToI( meal.isCow() );
 		url += "&vege=" + bToI( meal.isVegetarian() );
